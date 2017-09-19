@@ -41,7 +41,7 @@ class Table
         $cols         = array_intersect($cols, $this->cols);
         $columnObjArr = [];
         foreach ($cols as $col) {
-            $columnObjArr[] = new Column($col, $this->tableName);
+            $columnObjArr[] = new Column($col, $this);
         }
         return $columnObjArr;
     }

@@ -23,7 +23,7 @@ class Column
      * Column constructor.
      *
      * @param string $col
-     * @param string $table
+     * @param Table|string $table
      * @param string $alias
      */
     public function __construct(string $col, Table $table = null, string $alias = null)

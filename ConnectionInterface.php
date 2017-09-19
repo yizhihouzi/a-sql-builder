@@ -13,7 +13,13 @@ namespace DBOperate;
  */
 interface ConnectionInterface
 {
-    public static function getSchemaName();
+    static function getSchemaName();
 
-    public static function select(string $preStr, array $prepareValueArr);
+    static function select(string $preStr, array $prepareValueArr);
+
+    static function update(string $preStr, array $prepareValueArr);
+
+    static function delete(string $preStr, array $prepareValueArr);
+
+    static function insert(string $preStr, array $prepareValueArr);
 }

@@ -10,27 +10,17 @@ namespace DBOperate\Table;
 
 use DBOperate\Column;
 use DBOperate\Condition;
-use DBOperate\ConnectionInterface;
+use DBOperate\Connection;
 use DBOperate\Operate\Select;
 use DBOperate\Table;
 
 class InformationSchemaColumns
 {
     /**
-     * @var ConnectionInterface
-     */
-    private static $connection;
-
-    public static function setConnection(ConnectionInterface $connection)
-    {
-        self::$connection = $connection;
-    }
-
-    /**
      * Returns an array of values belonging to a given property of each item in a collection.
      *
-     * @param array  $collection array
-     * @param string $property   property name
+     * @param array $collection array
+     * @param string $property property name
      *
      * @return array
      */
@@ -64,15 +54,15 @@ class InformationSchemaColumns
     public static function getTableCols($tableName, $schemaName = null)
     {
         if (empty($schemaName)) {
-            $schemaName = self::$connection->getSchemaName();
+            $schemaName = Connection::getSchemaName();
         }
-        $table  = new Table('information_schema.COLUMNS');
+        $table = new Table('Information_schema`.`columns');
         $select = new Select($table);
         $select->fetchCols(new Column('COLUMN_NAME', $table));
         $condition1 = new Condition(new Column('table_schema', $table), $schemaName);
-        $condition2 = new Condition(new Column('table_name', $table), $table);
+        $condition2 = new Condition(new Column('table_name', $table), $tableName);
         $select->where($condition1, $condition2);
-        $rows = self::$connection->select(...$select->prepare());
+        $rows = Connection::select(...$select->prepare());
         return self::pluck($rows, 'COLUMN_NAME');
     }
 }
