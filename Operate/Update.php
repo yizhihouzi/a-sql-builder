@@ -14,44 +14,43 @@ use DBOperate\Condition;
 use DBOperate\DBOperate;
 use DBOperate\Table;
 
-class Select extends DBOperate
+class Update extends DBOperate
 {
-    private $fetchColumns = [];
+    private $columnUpdateInfo = [];
 
-    public function fetchCols(Column ...$cols)
+    public function setColumn(Column $col, $value, $isScalarValue = true)
     {
-        $this->fetchColumns = array_merge($this->fetchColumns, $cols);
+        $this->columnUpdateInfo[] = [$col, $value, $isScalarValue];
         return $this;
     }
 
-    public function createSelectColStr()
+    private function createUpdateColStr()
     {
-        $colsStrArr = [];
-        foreach ($this->fetchColumns as $column) {
-            /** @var Column $column */
-            $colsStrArr[] = $column->toSelectColStr();
+        $colUpdateStrArr = [];
+        foreach ($this->columnUpdateInfo as $singleColumnUpdateInfo) {
+            list($col, $value, $isScalarValue) = $singleColumnUpdateInfo;
+            $colName = (string)$col;
+            if ($isScalarValue) {
+                $colUpdateStrArr[] = "$colName='$value'";
+            } else {
+                $colUpdateStrArr[] = "$colName=$value";
+            }
         }
-        return implode(',', $colsStrArr);
+        return ' SET '.implode(',', $colUpdateStrArr);
     }
 
     public function prepare()
     {
         $table                = (string)$this->table;
-        $selectColStr         = $this->createSelectColStr();
+        $updateColStr         = $this->createUpdateColStr();
         $lJoinStr             = $this->createLJoinStr();
         $rJoinStr             = $this->createRJoinStr();
         $whereStr             = $this->createWhereConditionStr();
         $groupByColStr        = $this->createGroupByColStr();
-        $preStr               = "SELECT $selectColStr FROM $table $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $preStr               = "UPDATE $table $updateColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
         $lConditionValues     = $this->createLJoinConditionValueArr();
         $rConditionValues     = $this->createRJoinConditionValueArr();
         $whereConditionValues = $this->createWhereJoinConditionValueArr();
         return [$preStr, array_merge($lConditionValues, $rConditionValues, $whereConditionValues)];
-    }
-
-    function __toString()
-    {
-        $prepareResult = $this->prepare();
-        return json_encode($prepareResult);
     }
 }

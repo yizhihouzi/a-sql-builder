@@ -8,6 +8,8 @@
 
 namespace DBOperate;
 
+use DBOperate\Table\InformationSchemaColumns;
+
 /**
  * Class Table
  * @property array cols
@@ -20,23 +22,26 @@ class Table
      * @var array
      */
     private static $tableCols = [];
-    private $table;
+    private        $tableName;
 
     /**
      * Table constructor.
-     * @param $table
+     *
+     * @param string $table
+     *
+     * @internal param string $alias
      */
-    public function __construct($table)
+    public function __construct(string $table)
     {
-        $this->table = $table;
+        $this->tableName = $table;
     }
 
     public function columnObjArr(array $cols): array
     {
-        $cols = array_intersect($cols, $this->cols);
+        $cols         = array_intersect($cols, $this->cols);
         $columnObjArr = [];
         foreach ($cols as $col) {
-            $columnObjArr[] = new Column($col, $this->table);
+            $columnObjArr[] = new Column($col, $this->tableName);
         }
         return $columnObjArr;
     }
@@ -49,10 +54,17 @@ class Table
     function __get($name)
     {
         if ($name == 'cols') {
-            if (!isset(self::$tableCols[$this->table])) {
-                //查询表中列名
+            if (!isset(self::$tableCols[$this->tableName])) {
+                $cols                              =
+                    InformationSchemaColumns::getTableCols($this->tableName);
+                self::$tableCols[$this->tableName] = $cols;
             }
-            return self::$tableCols[$this->table];
+            return self::$tableCols[$this->tableName];
         }
+    }
+
+    function __toString()
+    {
+        return " `$this->tableName` ";
     }
 }

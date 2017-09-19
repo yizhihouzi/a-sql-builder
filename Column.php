@@ -17,24 +17,46 @@ class Column
 {
     private $table;
     private $col;
+    private $alias;
 
     /**
      * Column constructor.
-     * @param $table
-     * @param $col
+     *
+     * @param string $col
+     * @param string $table
+     * @param string $alias
      */
-    public function __construct(string $col, string $table = null)
+    public function __construct(string $col, Table $table = null, string $alias = null)
     {
         $this->table = $table;
-        $this->col = $col;
+        $this->col   = $col;
+        $this->alias = $alias;
     }
 
-    function __toString()
+    public function toSelectColStr()
     {
-        if (is_string($this->table)) {
-            return "`$this->table`.`$this->col`";
+        $col = null;
+        if (($this->table) instanceof Table) {
+            $tableName = (string)$this->table;
+            $col       = "$tableName.`$this->col`";
         } else {
-            return $this->col;
+            $col = $this->col;
         }
+        if (is_string($this->alias)) {
+            $col = "$col `$this->alias`";
+        }
+        return $col;
+    }
+
+    public function __toString()
+    {
+        $col = null;
+        if (($this->table) instanceof Table) {
+            $tableName = (string)$this->table;
+            $col       = "$tableName.`$this->col`";
+        } else {
+            $col = $this->col;
+        }
+        return $col;
     }
 }
