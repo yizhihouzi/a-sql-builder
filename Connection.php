@@ -31,7 +31,7 @@ class Connection implements ConnectionInterface
     {
         $stmt = self::execute($select->prepareStr(), $select->prepareValues());
         if (self::isPdoStatement($stmt)) {
-            if ($singleRow) {
+            if (!$singleRow) {
                 $result = $stmt->fetchAll();
             } else {
                 $result = $stmt->fetch();
