@@ -8,9 +8,6 @@
 
 namespace DBOperate;
 
-use DBOperate\Operate\Insert;
-use DBOperate\Operate\Select;
-use DBOperate\Operate\Update;
 use PDO;
 use PDOStatement;
 
@@ -30,13 +27,17 @@ class Connection implements ConnectionInterface
         return self::modifyData($update);
     }
 
-    public static function select(Operate $select)
+    public static function select(Operate $select, bool $singleRow = false)
     {
         $stmt = self::execute($select->prepareStr(), $select->prepareValues());
         if (self::isPdoStatement($stmt)) {
-            $rows = $stmt->fetchAll();
+            if ($singleRow) {
+                $result = $stmt->fetchAll();
+            } else {
+                $result = $stmt->fetch();
+            }
             $stmt->closeCursor();
-            return $rows;
+            return $result;
         } else {
             return false;
         }
