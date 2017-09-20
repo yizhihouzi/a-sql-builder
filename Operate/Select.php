@@ -34,24 +34,22 @@ class Select extends DBOperate
         return implode(',', $colsStrArr);
     }
 
-    public function prepare()
+    public function prepareStr()
     {
-        $table                = (string)$this->table;
-        $selectColStr         = $this->createSelectColStr();
-        $lJoinStr             = $this->createLJoinStr();
-        $rJoinStr             = $this->createRJoinStr();
-        $whereStr             = $this->createWhereConditionStr();
-        $groupByColStr        = $this->createGroupByColStr();
-        $preStr               = "SELECT $selectColStr FROM $table $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $table         = (string)$this->table;
+        $selectColStr  = $this->createSelectColStr();
+        $lJoinStr      = $this->createLJoinStr();
+        $rJoinStr      = $this->createRJoinStr();
+        $whereStr      = $this->createWhereConditionStr();
+        $groupByColStr = $this->createGroupByColStr();
+        return "SELECT $selectColStr FROM $table $lJoinStr $rJoinStr $whereStr $groupByColStr";
+    }
+
+    public function prepareValues()
+    {
         $lConditionValues     = $this->createLJoinConditionValueArr();
         $rConditionValues     = $this->createRJoinConditionValueArr();
         $whereConditionValues = $this->createWhereJoinConditionValueArr();
-        return [$preStr, array_merge($lConditionValues, $rConditionValues, $whereConditionValues)];
-    }
-
-    function __toString()
-    {
-        $prepareResult = $this->prepare();
-        return json_encode($prepareResult);
+        return array_merge($lConditionValues, $rConditionValues, $whereConditionValues);
     }
 }

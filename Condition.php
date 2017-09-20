@@ -9,6 +9,8 @@
 namespace DBOperate;
 
 
+use DBOperate\Operate\Select;
+
 class Condition
 {
     /**
@@ -53,7 +55,14 @@ class Condition
 
     public function getValue()
     {
-        return $this->isScalarValue ? $this->value : false;
+        if ($this->isScalarValue()) {
+            return $this->value;
+        } else {
+            if ($this->value instanceof Select) {
+                return $this->value->prepareValues();
+            }
+            return false;
+        }
     }
 
     /**
@@ -75,7 +84,12 @@ class Condition
                 $v = ' ? ';
             }
         } else {
-            $v = $this->value;
+            if ($this->value instanceof Select) {
+                $v = $this->value->prepareStr();
+                $v = "($v)";
+            } else {
+                $v = $this->value;
+            }
         }
         return sprintf(" %s %s %s ", (string)$this->column, $this->relation, $v);
     }

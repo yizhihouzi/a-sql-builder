@@ -33,24 +33,48 @@ class Update extends DBOperate
             if ($isScalarValue) {
                 $colUpdateStrArr[] = "$colName='$value'";
             } else {
-                $colUpdateStrArr[] = "$colName=$value";
+                if ($value instanceof Select) {
+                    $valueStr          = $value->prepareStr();
+                    $colUpdateStrArr[] = "$colName=($valueStr)";
+                } else {
+                    $colUpdateStrArr[] = "$colName=$value";
+                }
             }
         }
-        return ' SET '.implode(',', $colUpdateStrArr);
+        return ' SET ' . implode(',', $colUpdateStrArr);
     }
 
-    public function prepare()
+    private function createUpdateColValues()
     {
-        $table                = (string)$this->table;
-        $updateColStr         = $this->createUpdateColStr();
-        $lJoinStr             = $this->createLJoinStr();
-        $rJoinStr             = $this->createRJoinStr();
-        $whereStr             = $this->createWhereConditionStr();
-        $groupByColStr        = $this->createGroupByColStr();
-        $preStr               = "UPDATE $table $updateColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $colUpdateValueArr = [];
+        foreach ($this->columnUpdateInfo as $singleColumnUpdateInfo) {
+            list(, $value, $isScalarValue) = $singleColumnUpdateInfo;
+            if (!$isScalarValue) {
+                if ($value instanceof Select) {
+                    $colUpdateValueArr[] = $value->prepareValues();
+                }
+            }
+        }
+        return self::flatten($colUpdateValueArr);
+    }
+
+    public function prepareStr()
+    {
+        $table         = (string)$this->table;
+        $updateColStr  = $this->createUpdateColStr();
+        $lJoinStr      = $this->createLJoinStr();
+        $rJoinStr      = $this->createRJoinStr();
+        $whereStr      = $this->createWhereConditionStr();
+        $groupByColStr = $this->createGroupByColStr();
+        return "UPDATE $table $updateColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
+    }
+
+    public function prepareValues()
+    {
+        $updatePrepareValues  = $this->createUpdateColValues();
         $lConditionValues     = $this->createLJoinConditionValueArr();
         $rConditionValues     = $this->createRJoinConditionValueArr();
         $whereConditionValues = $this->createWhereJoinConditionValueArr();
-        return [$preStr, array_merge($lConditionValues, $rConditionValues, $whereConditionValues)];
+        return array_merge($updatePrepareValues, $lConditionValues, $rConditionValues, $whereConditionValues);
     }
 }

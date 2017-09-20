@@ -159,7 +159,7 @@ abstract class DBOperate
      * @return array
      *
      */
-    private static function flatten($array, $shallow = false)
+    protected static function flatten($array, $shallow = false)
     {
         $output = [];
         foreach ($array as $value) {
@@ -214,9 +214,18 @@ abstract class DBOperate
 
     function __toString()
     {
-        $prepareResult = $this->prepare();
-        return json_encode($prepareResult);
+        return json_encode([$this->prepareStr(), $this->prepareValues()]);
     }
 
-    public abstract function prepare();
+    public function toTestSql()
+    {
+        $preStr    = $this->prepareStr();
+        $preValues = $this->prepareValues();
+        $preStr    = str_replace('?', '\'%s\'', $preStr);
+        return vsprintf($preStr, $preValues);
+    }
+
+    public abstract function prepareStr();
+
+    public abstract function prepareValues();
 }

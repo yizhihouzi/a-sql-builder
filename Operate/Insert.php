@@ -36,18 +36,22 @@ class Insert extends DBOperate
         return "$colStr VALUES $valuesStr";
     }
 
-    public function prepare()
+    public function prepareStr()
     {
-        $table                = (string)$this->table;
-        $insertColStr         = $this->createInsertColStr();
-        $lJoinStr             = $this->createLJoinStr();
-        $rJoinStr             = $this->createRJoinStr();
-        $whereStr             = $this->createWhereConditionStr();
-        $groupByColStr        = $this->createGroupByColStr();
-        $preStr               = "INSERT INTO $table $insertColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $table         = (string)$this->table;
+        $insertColStr  = $this->createInsertColStr();
+        $lJoinStr      = $this->createLJoinStr();
+        $rJoinStr      = $this->createRJoinStr();
+        $whereStr      = $this->createWhereConditionStr();
+        $groupByColStr = $this->createGroupByColStr();
+        return "INSERT INTO $table $insertColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
+    }
+
+    public function prepareValues()
+    {
         $lConditionValues     = $this->createLJoinConditionValueArr();
         $rConditionValues     = $this->createRJoinConditionValueArr();
         $whereConditionValues = $this->createWhereJoinConditionValueArr();
-        return [$preStr, array_merge($lConditionValues, $rConditionValues, $whereConditionValues)];
+        return array_merge($lConditionValues, $rConditionValues, $whereConditionValues);
     }
 }
