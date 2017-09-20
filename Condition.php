@@ -34,7 +34,7 @@ class Condition
      */
     private $isScalarValue;
 
-    public function __construct(Column $column, $value, $relation = '=', $isScalarValue = true, $groupName = 'e')
+    public function __construct(Column $column, $value, $isScalarValue = true, $relation = '=', $groupName = 'e')
     {
         if ($isScalarValue && $relation == 'in') {
             if (!is_array($value)) {

@@ -22,9 +22,9 @@ class Column
     /**
      * Column constructor.
      *
-     * @param string $col
+     * @param string       $col
      * @param Table|string $table
-     * @param string $alias
+     * @param string       $alias
      */
     public function __construct(string $col, Table $table = null, string $alias = null)
     {
@@ -46,6 +46,11 @@ class Column
             $col = "$col `$this->alias`";
         }
         return $col;
+    }
+
+    public function createCondition($value, $isScalarValue = true, $relation = '=', $groupName = 'e')
+    {
+        return new Condition($this, $value, $isScalarValue, $relation, $groupName);
     }
 
     public function __toString()
