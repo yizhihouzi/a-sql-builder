@@ -10,13 +10,12 @@ namespace DBOperate\Operate;
 
 
 use DBOperate\Column;
-use DBOperate\Condition;
 use DBOperate\DBOperate;
-use DBOperate\Table;
 
 class Select extends DBOperate
 {
     private $fetchColumns = [];
+    private $limitStart, $limitEnd;
 
     public function fetchCols(Column ...$cols)
     {
@@ -34,6 +33,12 @@ class Select extends DBOperate
         return implode(',', $colsStrArr);
     }
 
+    public function limit(int $start, int $end)
+    {
+        $this->limitStart = $start;
+        $this->limitEnd   = $end;
+    }
+
     public function prepareStr()
     {
         $table         = (string)$this->table;
@@ -42,7 +47,11 @@ class Select extends DBOperate
         $rJoinStr      = $this->createRJoinStr();
         $whereStr      = $this->createWhereConditionStr();
         $groupByColStr = $this->createGroupByColStr();
-        return "SELECT $selectColStr FROM $table $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $preStr        = "SELECT $selectColStr FROM $table $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        if (is_int($this->limitStart) && is_int($this->limitEnd)) {
+            $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
+        }
+        return $preStr;
     }
 
     public function prepareValues()

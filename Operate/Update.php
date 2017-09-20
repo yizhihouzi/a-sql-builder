@@ -8,11 +8,8 @@
 
 namespace DBOperate\Operate;
 
-
 use DBOperate\Column;
-use DBOperate\Condition;
 use DBOperate\DBOperate;
-use DBOperate\Table;
 
 class Update extends DBOperate
 {
