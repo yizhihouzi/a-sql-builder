@@ -62,7 +62,7 @@ class InformationSchemaColumns
         $condition1 = new Condition(new Column('table_schema', $table), $schemaName);
         $condition2 = new Condition(new Column('table_name', $table), $tableName);
         $select->where($condition1, $condition2);
-        $rows = Connection::select($select->prepareStr(),$select->prepareValues());
+        $rows = Connection::select($select);
         return self::pluck($rows, 'COLUMN_NAME');
     }
 }
