@@ -10,9 +10,9 @@ namespace DBOperate\Operate;
 
 
 use DBOperate\Column;
-use DBOperate\DBOperate;
+use DBOperate\Operate;
 
-class Select extends DBOperate
+class Select extends Operate
 {
     private $fetchColumns = [];
     private $limitStart, $limitEnd;

@@ -9,7 +9,7 @@
 namespace DBOperate;
 
 
-abstract class DBOperate
+abstract class Operate
 {
     protected $table;
 

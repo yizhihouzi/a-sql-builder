@@ -8,6 +8,9 @@
 
 namespace DBOperate;
 
+use DBOperate\Operate\Insert;
+use DBOperate\Operate\Select;
+use DBOperate\Operate\Update;
 use PDO;
 use PDOStatement;
 
@@ -17,24 +20,19 @@ use PDOStatement;
  */
 class Connection implements ConnectionInterface
 {
-    public static function insert(string $preStr, array $inputParams)
+    public static function insert(Operate $insert)
     {
-        return self::modifyData($preStr, $inputParams);
+        return self::modifyData($insert);
     }
 
-    public static function delete(string $preStr, array $inputParams)
+    public static function update(Operate $update)
     {
-        return self::modifyData($preStr, $inputParams);
+        return self::modifyData($update);
     }
 
-    public static function update(string $preStr, array $inputParams)
+    public static function select(Operate $select)
     {
-        return self::modifyData($preStr, $inputParams);
-    }
-
-    public static function select(string $preStr, array $inputParams)
-    {
-        $stmt = self::execute($preStr, $inputParams);
+        $stmt = self::execute($select->prepareStr(), $select->prepareValues());
         if (self::isPdoStatement($stmt)) {
             $rows = $stmt->fetchAll();
             $stmt->closeCursor();
@@ -44,9 +42,9 @@ class Connection implements ConnectionInterface
         }
     }
 
-    private static function modifyData(string $preStr, array $inputParams)
+    private static function modifyData(Operate $operate)
     {
-        $stmt = self::execute($preStr, $inputParams);
+        $stmt = self::execute($operate->prepareStr(), $operate->prepareValues());
         if (self::isPdoStatement($stmt)) {
             $affectNum = $stmt->rowCount();
             $stmt->closeCursor();
@@ -57,10 +55,10 @@ class Connection implements ConnectionInterface
     }
 
     /**
-     * @param string $preStr
+     * @param string     $preStr
      * @param array|null $inputParams
-     * @param int $curExeTime
-     * @param int $maxReExeTimes
+     * @param int        $curExeTime
+     * @param int        $maxReExeTimes
      *
      * @return bool|PDOStatement
      */
@@ -69,19 +67,18 @@ class Connection implements ConnectionInterface
         array $inputParams,
         $curExeTime = 0,
         $maxReExeTimes = 2
-    )
-    {
+    ) {
         $pdo = self::getPdo();
         if (!self::isPDOInstance($pdo)) {
             return false;
         }
         try {
-            $stmt = @$pdo->prepare($preStr);
+            $stmt     = @$pdo->prepare($preStr);
             $exeState = $stmt->execute($inputParams);
             if ($exeState === true) {
                 return $stmt;
             } else {
-                $err['sql'] = $stmt->queryString;
+                $err['sql']   = $stmt->queryString;
                 $err['input'] = $inputParams;
             }
         } catch (\PDOException $e) {
@@ -92,11 +89,11 @@ class Connection implements ConnectionInterface
                 }
             }
             $err['statement'] = $preStr;
-            $err['input'] = $inputParams;
+            $err['input']     = $inputParams;
             $err['exception'] = $e->errorInfo;
-        }var_dump($err);
+        }
         if (!empty(self::$logger)) {
-//            self::$logger->log(json_encode($err), Logger::ERROR);
+            //            self::$logger->log(json_encode($err), Logger::ERROR);
         }
         return false;
     }
@@ -170,24 +167,24 @@ class Connection implements ConnectionInterface
         if (empty(self::$config)) {
             throw new \UnexpectedValueException("self::\$config is null.");
         }
-        $config = self::$config;
-        $dsn = <<<TAG
+        $config     = self::$config;
+        $dsn        = <<<TAG
 {$config['driver']}:host={$config['host']};port={$config['port']};dbname={$config['db']};charset={$config['charset']}
 TAG;
-        $charset = $config['charset'];
+        $charset    = $config['charset'];
         $pdoOptions = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_NAMED,
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset",
-            PDO::MYSQL_ATTR_FOUND_ROWS => true,
-            PDO::ATTR_EMULATE_PREPARES => false
+            PDO::MYSQL_ATTR_FOUND_ROWS   => true,
+            PDO::ATTR_EMULATE_PREPARES   => false
         ];
         try {
             $instance = new PDO($dsn, $config['user'], $config['pwd'], $pdoOptions);
             return $pdo = $instance;
         } catch (\PDOException $e) {
             if (!empty(self::$logger)) {
-//                self::$logger->log(json_encode($e->getMessage()), Logger::EMERGENCY);
+                //                self::$logger->log(json_encode($e->getMessage()), Logger::EMERGENCY);
             }
             return false;
         }

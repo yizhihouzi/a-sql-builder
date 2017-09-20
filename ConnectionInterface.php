@@ -15,11 +15,9 @@ interface ConnectionInterface
 {
     static function getSchemaName();
 
-    static function select(string $preStr, array $prepareValueArr);
+    static function select(Operate $operate);
 
-    static function update(string $preStr, array $prepareValueArr);
+    static function update(Operate $operate);
 
-    static function delete(string $preStr, array $prepareValueArr);
-
-    static function insert(string $preStr, array $prepareValueArr);
+    static function insert(Operate $operate);
 }

@@ -9,9 +9,9 @@
 namespace DBOperate\Operate;
 
 use DBOperate\Column;
-use DBOperate\DBOperate;
+use DBOperate\Operate;
 
-class Update extends DBOperate
+class Update extends Operate
 {
     private $columnUpdateInfo = [];
 

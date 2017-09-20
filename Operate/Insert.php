@@ -8,9 +8,9 @@
 
 namespace DBOperate\Operate;
 
-use DBOperate\DBOperate;
+use DBOperate\Operate;
 
-class Insert extends DBOperate
+class Insert extends Operate
 {
     private $insertInfo = [];
 
