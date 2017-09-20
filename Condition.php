@@ -81,7 +81,7 @@ class Condition
                 $valueHolder = rtrim($valueHolder, ',');
                 $v           = "($valueHolder)";
             } else {
-                $v = ' ? ';
+                $v = '?';
             }
         } else {
             if ($this->value instanceof Select) {
@@ -91,6 +91,6 @@ class Condition
                 $v = $this->value;
             }
         }
-        return sprintf(" %s %s %s ", (string)$this->column, $this->relation, $v);
+        return sprintf("%s%s%s", (string)$this->column, $this->relation, $v);
     }
 }

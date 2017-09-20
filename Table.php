@@ -65,6 +65,6 @@ class Table
 
     function __toString()
     {
-        return " `$this->tableName` ";
+        return "`$this->tableName`";
     }
 }

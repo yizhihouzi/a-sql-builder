@@ -124,7 +124,7 @@ abstract class DBOperate
     protected function createWhereConditionStr()
     {
         if (!empty($this->whereConditions)) {
-            return ' WHERE ' . self::createConditionArrStr($this->whereConditions);
+            return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
         }
         return '';
     }
@@ -144,7 +144,7 @@ abstract class DBOperate
             $colStrArr[] = (string)$column;
         }
         $colStr = implode(',', $colStrArr);
-        return " GROUP BY ($colStr) ";
+        return "GROUP BY ($colStr) ";
     }
 
     /**

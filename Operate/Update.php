@@ -41,7 +41,7 @@ class Update extends DBOperate
                 }
             }
         }
-        return ' SET ' . implode(',', $colUpdateStrArr);
+        return 'SET ' . implode(',', $colUpdateStrArr);
     }
 
     private function createUpdateColValues()
