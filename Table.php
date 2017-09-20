@@ -36,9 +36,17 @@ class Table
         $this->tableName = $table;
     }
 
-    public function columnObjArr(array $cols): array
+    public function columnObjArr(array $cols = null, $invert = false): array
     {
-        $cols         = array_intersect($cols, $this->cols);
+        if (!empty($cols)) {
+            if (!$invert) {
+                $cols = array_intersect($cols, $this->cols);
+            } else {
+                $cols = array_diff($this->cols, $cols);
+            }
+        } else {
+            $cols = $this->cols;
+        }
         $columnObjArr = [];
         foreach ($cols as $col) {
             $columnObjArr[] = new Column($col, $this);
