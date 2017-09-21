@@ -1,0 +1,34 @@
+{
+  "name": "yizhihouzi/ASqlBuilder",
+  "type": "library",
+  "keywords": [
+    "sql",
+    "builder"
+  ],
+  "homepage": "https://www.monkeystar.cn",
+  "license": "MIT",
+  "description": "Another PHP Sql Builder With Clear Structure.",
+  "authors": [
+    {
+      "name": "yizhihouzi",
+      "email": "yizhihouzi@monkeystar.cn",
+      "homepage": "https://www.monkeystar.cn",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "yizhihouzi@monkeystar.cn",
+    "issues": "https://github.com/yizhihouzi/ASqlBuilder/issues"
+  },
+  "require": {
+    "php": ">=7.1"
+  },
+  "suggest": {
+  },
+  "autoload": {
+    "psr-4": {
+      "DBOperate\\": "./"
+    }
+  },
+  "minimum-stability": "dev"
+}
