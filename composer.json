@@ -1,5 +1,5 @@
 {
-  "name": "yizhihouzi/ASqlBuilder",
+  "name": "yizhihouzi/a-sql-builder",
   "type": "library",
   "keywords": [
     "sql",
@@ -18,7 +18,7 @@
   ],
   "support": {
     "email": "yizhihouzi@monkeystar.cn",
-    "issues": "https://github.com/yizhihouzi/ASqlBuilder/issues"
+    "issues": "https://github.com/yizhihouzi/a-sql-builder/issues"
   },
   "require": {
     "php": ">=7.1"
