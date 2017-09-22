@@ -56,6 +56,9 @@ class Condition
     public function getValue()
     {
         if ($this->isScalarValue()) {
+            if (is_null($this->value)) {
+                return false;
+            }
             return $this->value;
         } else {
             if ($this->value instanceof Select) {
