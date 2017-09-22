@@ -106,7 +106,7 @@ class Connection implements ConnectionInterface
      * 只有凭相应的事务ID才可以关闭这个事务，解决事务嵌套问题
      * @return bool|int
      */
-    protected static function beginTransaction()
+    public static function beginTransaction()
     {
         $pdo = self::getPdo();
         if (self::isPDOInstance($pdo) && !$pdo->inTransaction()) {
@@ -122,7 +122,7 @@ class Connection implements ConnectionInterface
         return false;
     }
 
-    protected static function commitTransaction($transactionId)
+    public static function commitTransaction($transactionId)
     {
         $pdo = self::getPdo();
         if (($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
@@ -131,7 +131,7 @@ class Connection implements ConnectionInterface
         return false;
     }
 
-    protected static function rollBackTransaction($transactionId)
+    public static function rollBackTransaction($transactionId)
     {
         $pdo = self::getPdo();
         if (($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()
@@ -141,7 +141,7 @@ class Connection implements ConnectionInterface
         return false;
     }
 
-    protected static function getLastInsertId()
+    public static function getLastInsertId()
     {
         $pdo = self::getPdo();
         if (self::isPDOInstance($pdo)) {
