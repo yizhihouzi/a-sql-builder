@@ -80,6 +80,13 @@ class Condition
                 $valueHolder = str_repeat('?,', count($this->value));
                 $valueHolder = rtrim($valueHolder, ',');
                 $v           = "($valueHolder)";
+            } elseif (is_null($this->value)) {
+                $v = '';
+                if ($this->relation == '=') {
+                    $this->relation = ' is null';
+                } else {
+                    $this->relation = ' is not null';
+                }
             } else {
                 $v = '?';
             }
