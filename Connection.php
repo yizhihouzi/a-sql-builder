@@ -93,8 +93,8 @@ class Connection implements ConnectionInterface
             $err['input']     = $inputParams;
             $err['exception'] = $e->errorInfo;
         }
-        if (!empty(self::$logger)) {
-            //            self::$logger->log(json_encode($err), Logger::ERROR);
+        if (!empty(self::$logger) && is_callable([self::$logger, 'debug'])) {
+            self::$logger->debug(json_encode($err));
         }
         return false;
     }
@@ -184,8 +184,8 @@ TAG;
             $instance = new PDO($dsn, $config['user'], $config['pwd'], $pdoOptions);
             return $pdo = $instance;
         } catch (\PDOException $e) {
-            if (!empty(self::$logger)) {
-                //                self::$logger->log(json_encode($e->getMessage()), Logger::EMERGENCY);
+            if (!empty(self::$logger) && is_callable([self::$logger, 'emergency'])) {
+                self::$logger->emergency(json_encode($e->getMessage()));
             }
             return false;
         }
