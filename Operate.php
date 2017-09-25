@@ -17,6 +17,7 @@ abstract class Operate
     protected $whereConditions = [];
     protected $lJoinInfo       = [];
     protected $rJoinInfo       = [];
+    protected $withTableArr    = [];
 
     /**
      * DBOperateInterface constructor.
@@ -52,6 +53,11 @@ abstract class Operate
         return $this;
     }
 
+    public function with(Table $table)
+    {
+        $this->withTableArr[] = $table;
+    }
+
     private static function createConditionArrStr(array $conditionArr)
     {
         if (empty($conditionArr)) {
@@ -85,6 +91,13 @@ abstract class Operate
             }
         }
         return self::flatten($values);
+    }
+
+    public function createTablesStr()
+    {
+        $tablesStr = implode(',', $this->withTableArr);
+        $tablesStr = "$this->table,$tablesStr";
+        return $tablesStr;
     }
 
     private static function createJoinStr($joinInfo, $joinDirection)

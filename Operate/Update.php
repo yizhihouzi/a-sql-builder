@@ -57,13 +57,13 @@ class Update extends Operate
 
     public function prepareStr()
     {
-        $table         = (string)$this->table;
+        $tablesStr     = self::createTablesStr();
         $updateColStr  = $this->createUpdateColStr();
         $lJoinStr      = $this->createLJoinStr();
         $rJoinStr      = $this->createRJoinStr();
         $whereStr      = $this->createWhereConditionStr();
         $groupByColStr = $this->createGroupByColStr();
-        return "UPDATE $table $updateColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        return "UPDATE $tablesStr $updateColStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
     }
 
     public function prepareValues()

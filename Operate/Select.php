@@ -41,13 +41,13 @@ class Select extends Operate
 
     public function prepareStr()
     {
-        $table         = (string)$this->table;
+        $tablesStr     = $this->createTablesStr();
         $selectColStr  = $this->createSelectColStr();
         $lJoinStr      = $this->createLJoinStr();
         $rJoinStr      = $this->createRJoinStr();
         $whereStr      = $this->createWhereConditionStr();
         $groupByColStr = $this->createGroupByColStr();
-        $preStr        = "SELECT $selectColStr FROM $table $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $preStr        = "SELECT $selectColStr FROM $tablesStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
         if (is_int($this->limitStart) && is_int($this->limitEnd)) {
             $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
         }
