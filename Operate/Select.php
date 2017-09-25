@@ -41,7 +41,7 @@ class Select extends Operate
 
     public function prepareStr()
     {
-        $tablesStr     = $this->createTablesStr();
+        $tablesStr     = $this->table;
         $selectColStr  = $this->createSelectColStr();
         $lJoinStr      = $this->createLJoinStr();
         $rJoinStr      = $this->createRJoinStr();

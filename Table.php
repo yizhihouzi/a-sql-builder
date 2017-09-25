@@ -48,8 +48,12 @@ class Table
             $cols = $this->cols;
         }
         $columnObjArr = [];
-        foreach ($cols as $col) {
-            $columnObjArr[] = new Column($col, $this);
+        foreach ($cols as $key => $v) {
+            if (is_numeric($key)) {
+                $columnObjArr[] = new Column($v, $this);
+            } else {
+                $columnObjArr[] = new Column($key, $this, $v);
+            }
         }
         return $columnObjArr;
     }

@@ -29,36 +29,24 @@ class Condition
      * @var mixed 与$col列值进行比较的值
      */
     private $value;
-    /**
-     * @var bool 标识$value是否为标量值，即是否会被单引号包裹
-     */
-    private $isScalarValue;
 
-    public function __construct(Column $column, $value, $isScalarValue = true, $relation = '=', $groupName = 'e')
+    public function __construct(Column $column, $value, $relation = '=', $groupName = 'e')
     {
-        if ($isScalarValue && $relation == 'in') {
+
+        if (is_scalar($value) && $relation == 'in') {
             if (!is_array($value)) {
                 throw new \Exception('$value must be array type while $isScalarValue==true and $relation=="in"');
             }
         }
-        $this->groupName     = $groupName;
-        $this->relation      = $relation;
-        $this->column        = $column;
-        $this->value         = $value;
-        $this->isScalarValue = $isScalarValue;
-    }
-
-    public function isScalarValue()
-    {
-        return $this->isScalarValue;
+        $this->groupName = $groupName;
+        $this->relation  = $relation;
+        $this->column    = $column;
+        $this->value     = $value;
     }
 
     public function getValue()
     {
-        if ($this->isScalarValue()) {
-            if (is_null($this->value)) {
-                return false;
-            }
+        if (is_scalar($this->value)) {
             return $this->value;
         } else {
             if ($this->value instanceof Select) {
@@ -78,18 +66,12 @@ class Condition
 
     public function __toString()
     {
-        if ($this->isScalarValue) {
+        $relation = $this->relation;
+        if (is_scalar($this->value)) {
             if ($this->relation == 'in') {
                 $valueHolder = str_repeat('?,', count($this->value));
                 $valueHolder = rtrim($valueHolder, ',');
                 $v           = "($valueHolder)";
-            } elseif (is_null($this->value)) {
-                $v = '';
-                if ($this->relation == '=') {
-                    $this->relation = ' is null';
-                } else {
-                    $this->relation = ' is not null';
-                }
             } else {
                 $v = '?';
             }
@@ -97,10 +79,17 @@ class Condition
             if ($this->value instanceof Select) {
                 $v = $this->value->prepareStr();
                 $v = "($v)";
+            } elseif (is_null($this->value)) {
+                $v = '';
+                if ($this->relation == '=') {
+                    $relation = ' is null';
+                } else {
+                    $relation = ' is not null';
+                }
             } else {
                 $v = $this->value;
             }
         }
-        return sprintf("%s%s%s", (string)$this->column, $this->relation, $v);
+        return sprintf("%s%s%s", (string)$this->column, $relation, $v);
     }
 }
