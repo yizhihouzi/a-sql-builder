@@ -48,9 +48,9 @@ class Column
         return $col;
     }
 
-    public function createCondition($value, $isScalarValue = true, $relation = '=', $groupName = 'e')
+    public function createCondition($value, $relation = '=', $groupName = 'e')
     {
-        return new Condition($this, $value, $isScalarValue, $relation, $groupName);
+        return new Condition($this, $value, $relation, $groupName);
     }
 
     public function __toString()
