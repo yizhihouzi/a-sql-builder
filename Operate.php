@@ -53,9 +53,9 @@ abstract class Operate
         return $this;
     }
 
-    public function with(Table $table)
+    public function with(Table ...$tableArr)
     {
-        $this->withTableArr[] = $table;
+        $this->withTableArr = array_merge($this->withTableArr, $tableArr);
     }
 
     private static function createConditionArrStr(array $conditionArr)
