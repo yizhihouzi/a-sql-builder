@@ -8,6 +8,7 @@
 
 namespace DBOperate\Operate;
 
+use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Operate;
 use DBOperate\Table;
@@ -70,7 +71,7 @@ class Update extends Operate
                 }
             }
         }
-        return self::flatten($colUpdateValueArr);
+        return ArrayHelper::flatten($colUpdateValueArr);
     }
 
     public function prepareStr()

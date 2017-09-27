@@ -53,6 +53,21 @@ class Column
         return new Condition($this, $value, $relation, $groupName);
     }
 
+    public function colName()
+    {
+        return $this->col;
+    }
+
+    public function aliasName()
+    {
+        return $this->alias;
+    }
+
+    public function tableName()
+    {
+        return $this->table;
+    }
+
     public function __toString()
     {
         $col = null;
