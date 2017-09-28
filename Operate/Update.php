@@ -31,9 +31,11 @@ class Update extends Operate
 
     public function createTablesStr()
     {
-        $tablesStr = implode(',', $this->withTableArr);
-        $tablesStr = "$this->table,$tablesStr";
-        return $tablesStr;
+        if (!empty($this->withTableArr)) {
+            $withTableStr = implode(',', $this->withTableArr);
+            return "$this->table,$withTableStr";
+        }
+        return $this->table;
     }
 
     private function createUpdateColStr()
