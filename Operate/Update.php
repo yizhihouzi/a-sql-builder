@@ -46,7 +46,7 @@ class Update extends Operate
             $colName       = (string)$col;
             $isScalarValue = is_scalar($value);
             if ($isScalarValue) {
-                $colUpdateStrArr[] = "$colName='$value'";
+                $colUpdateStrArr[] = "$colName=?";
             } else {
                 if ($value instanceof Select) {
                     $valueStr          = $value->prepareStr();
@@ -71,6 +71,8 @@ class Update extends Operate
                 if ($value instanceof Select) {
                     $colUpdateValueArr[] = $value->prepareValues();
                 }
+            } else {
+                $colUpdateValueArr[] = $value;
             }
         }
         return ArrayHelper::flatten($colUpdateValueArr);
