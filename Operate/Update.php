@@ -8,6 +8,7 @@
 
 namespace DBOperate\Operate;
 
+use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Operate;
 use DBOperate\Table;
@@ -30,9 +31,11 @@ class Update extends Operate
 
     public function createTablesStr()
     {
-        $tablesStr = implode(',', $this->withTableArr);
-        $tablesStr = "$this->table,$tablesStr";
-        return $tablesStr;
+        if (!empty($this->withTableArr)) {
+            $withTableStr = implode(',', $this->withTableArr);
+            return "$this->table,$withTableStr";
+        }
+        return $this->table;
     }
 
     private function createUpdateColStr()
@@ -43,7 +46,7 @@ class Update extends Operate
             $colName       = (string)$col;
             $isScalarValue = is_scalar($value);
             if ($isScalarValue) {
-                $colUpdateStrArr[] = "$colName='$value'";
+                $colUpdateStrArr[] = "$colName=?";
             } else {
                 if ($value instanceof Select) {
                     $valueStr          = $value->prepareStr();
@@ -68,9 +71,11 @@ class Update extends Operate
                 if ($value instanceof Select) {
                     $colUpdateValueArr[] = $value->prepareValues();
                 }
+            } else {
+                $colUpdateValueArr[] = $value;
             }
         }
-        return self::flatten($colUpdateValueArr);
+        return ArrayHelper::flatten($colUpdateValueArr);
     }
 
     public function prepareStr()

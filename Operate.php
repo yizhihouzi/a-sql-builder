@@ -74,7 +74,7 @@ abstract class Operate
     private static function createConditionValueArr(...$conditionArr)
     {
         $values       = [];
-        $conditionArr = self::flatten($conditionArr);
+        $conditionArr = ArrayHelper::flatten($conditionArr);
         foreach ($conditionArr as $condition) {
             if ($condition instanceof Condition) {
                 if (($v = $condition->getValue()) !== false) {
@@ -84,7 +84,7 @@ abstract class Operate
                 throw new \Exception("$condition can not transform to Condition type");
             }
         }
-        return self::flatten($values);
+        return ArrayHelper::flatten($values);
     }
 
     private static function createJoinStr($joinInfo, $joinDirection)
@@ -106,13 +106,13 @@ abstract class Operate
 
     protected function createLJoinConditionValueArr()
     {
-        $conditionArr = self::pluck($this->lJoinInfo, 1);
+        $conditionArr = ArrayHelper::pluck($this->lJoinInfo, 1);
         return self::createConditionValueArr($conditionArr);
     }
 
     protected function createRJoinConditionValueArr()
     {
-        $conditionArr = self::pluck($this->rJoinInfo, 1);
+        $conditionArr = ArrayHelper::pluck($this->rJoinInfo, 1);
         return self::createConditionValueArr($conditionArr);
     }
 
@@ -145,71 +145,6 @@ abstract class Operate
         }
         $colStr = implode(',', $colStrArr);
         return "GROUP BY ($colStr) ";
-    }
-
-    /**
-     * Flattens a multidimensional array. If you pass shallow, the array will only be flattened a single level.
-     *
-     * __::flatten([1, 2, [3, [4]]], [flatten]);
-     *      >> [1, 2, 3, 4]
-     *
-     * @param      $array
-     * @param bool $shallow
-     *
-     * @return array
-     *
-     */
-    protected static function flatten($array, $shallow = false)
-    {
-        $output = [];
-        foreach ($array as $value) {
-            if (is_array($value)) {
-                if (!$shallow) {
-                    $value = self::flatten($value, $shallow);
-                }
-                foreach ($value as $valItem) {
-                    $output[] = $valItem;
-                }
-            } else {
-                $output[] = $value;
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Returns an array of values belonging to a given property of each item in a collection.
-     *
-     * @param array  $collection array
-     * @param string $property   property name
-     *
-     * @return array
-     */
-    private static function pluck(array $collection, $property)
-    {
-        return \array_map(function ($value) use ($property) {
-            if (isset($value[$property])) {
-                return $value[$property];
-            }
-
-            foreach (\explode('.', $property) as $segment) {
-                if (\is_object($value)) {
-                    if (isset($value->{$segment})) {
-                        $value = $value->{$segment};
-                    } else {
-                        return null;
-                    }
-                } else {
-                    if (isset($value[$segment])) {
-                        $value = $value[$segment];
-                    } else {
-                        return null;
-                    }
-                }
-            }
-
-            return $value;
-        }, (array)$collection);
     }
 
     function __toString()

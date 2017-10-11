@@ -38,21 +38,32 @@ class Table
 
     public function columnObjArr(array $cols = null, $invert = false): array
     {
+        $cols       = is_array($cols) ? $cols : [];
+        $colNameArr = [];
         if (!empty($cols)) {
+            foreach ($cols as $key => $v) {
+                if (is_numeric($key)) {
+                    $colNameArr[] = $v;
+                } else {
+                    $colNameArr[] = $key;
+                }
+            }
+        }
+        if (!empty($colNameArr)) {
             if (!$invert) {
-                $cols = array_intersect($cols, $this->cols);
+                $colNameArr = array_intersect($colNameArr, $this->cols);
             } else {
-                $cols = array_diff($this->cols, $cols);
+                $colNameArr = array_diff($this->cols, $colNameArr);
             }
         } else {
-            $cols = $this->cols;
+            $colNameArr = $this->cols;
         }
         $columnObjArr = [];
-        foreach ($cols as $key => $v) {
-            if (is_numeric($key)) {
+        foreach ($colNameArr as $v) {
+            if (!array_key_exists($v, $cols)) {
                 $columnObjArr[] = new Column($v, $this);
             } else {
-                $columnObjArr[] = new Column($key, $this, $v);
+                $columnObjArr[] = new Column($v, $this, $cols[$v]);
             }
         }
         return $columnObjArr;

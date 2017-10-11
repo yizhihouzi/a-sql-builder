@@ -32,11 +32,8 @@ class Condition
 
     public function __construct(Column $column, $value, $relation = '=', $groupName = 'e')
     {
-
-        if (is_scalar($value) && $relation == 'in') {
-            if (!is_array($value)) {
-                throw new \Exception('$value must be array type while $isScalarValue==true and $relation=="in"');
-            }
+        if ($relation == 'in' && !is_array($value)) {
+            throw new \Exception('$value must be array type while $isScalarValue==true and $relation=="in"');
         }
         $this->groupName = $groupName;
         $this->relation  = $relation;
@@ -47,6 +44,8 @@ class Condition
     public function getValue()
     {
         if (is_scalar($this->value)) {
+            return $this->value;
+        } elseif ($this->relation == 'in' && is_array($this->value)) {
             return $this->value;
         } else {
             if ($this->value instanceof Select) {
@@ -68,13 +67,11 @@ class Condition
     {
         $relation = $this->relation;
         if (is_scalar($this->value)) {
-            if ($this->relation == 'in') {
-                $valueHolder = str_repeat('?,', count($this->value));
-                $valueHolder = rtrim($valueHolder, ',');
-                $v           = "($valueHolder)";
-            } else {
-                $v = '?';
-            }
+            $v = '?';
+        } elseif ($this->relation == 'in' && is_array($this->value)) {
+            $valueHolder = str_repeat('?,', count($this->value));
+            $valueHolder = rtrim($valueHolder, ',');
+            $v           = "($valueHolder)";
         } else {
             if ($this->value instanceof Select) {
                 $v = $this->value->prepareStr();

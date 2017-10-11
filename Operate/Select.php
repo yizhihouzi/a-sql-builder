@@ -9,6 +9,7 @@
 namespace DBOperate\Operate;
 
 
+use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Operate;
 
@@ -17,9 +18,9 @@ class Select extends Operate
     private $fetchColumns = [];
     private $limitStart, $limitEnd;
 
-    public function fetchCols(Column ...$cols)
+    public function fetchCols(...$cols)
     {
-        $this->fetchColumns = array_merge($this->fetchColumns, $cols);
+        $this->fetchColumns = array_merge($this->fetchColumns, ArrayHelper::flatten($cols));
         return $this;
     }
 
