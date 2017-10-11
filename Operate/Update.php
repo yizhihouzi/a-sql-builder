@@ -16,11 +16,11 @@ use DBOperate\Table;
 
 class Update extends Operate
 {
-    private   $columnUpdateInfo = [];
-    protected $withTableArr     = [];
-    private   $limitStart, $limitEnd;
+    private $columnUpdateInfo = [];
+    private $withTableArr     = [];
+    private $limitStart, $limitEnd;
 
-    protected $whereConditions = [];
+    private $whereConditions = [];
 
     public function setColumn(Column $col, $value)
     {
@@ -81,7 +81,7 @@ class Update extends Operate
         return implode(' OR ', $conditionGroup);
     }
 
-    protected function createWhereConditionStr()
+    private function createWhereConditionStr()
     {
         if (!empty($this->whereConditions)) {
             return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
@@ -89,7 +89,7 @@ class Update extends Operate
         return '';
     }
 
-    protected function createWhereJoinConditionValueArr()
+    private function createWhereJoinConditionValueArr()
     {
         return self::createConditionValueArr($this->whereConditions);
     }

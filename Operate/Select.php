@@ -19,10 +19,10 @@ class Select extends Operate
     private $fetchColumns = [];
     private $limitStart, $limitEnd;
 
-    protected $groupByColumns  = [];
-    protected $whereConditions = [];
-    protected $lJoinInfo       = [];
-    protected $rJoinInfo       = [];
+    private $groupByColumns  = [];
+    private $whereConditions = [];
+    private $lJoinInfo       = [];
+    private $rJoinInfo       = [];
 
     public function fetchCols(...$cols)
     {
@@ -105,29 +105,29 @@ class Select extends Operate
         return implode('', $lJoinStrArr);
     }
 
-    protected function createLJoinStr()
+    private function createLJoinStr()
     {
         return self::createJoinStr($this->lJoinInfo, 'LEFT');
     }
 
-    protected function createLJoinConditionValueArr()
+    private function createLJoinConditionValueArr()
     {
         $conditionArr = ArrayHelper::pluck($this->lJoinInfo, 1);
         return self::createConditionValueArr($conditionArr);
     }
 
-    protected function createRJoinConditionValueArr()
+    private function createRJoinConditionValueArr()
     {
         $conditionArr = ArrayHelper::pluck($this->rJoinInfo, 1);
         return self::createConditionValueArr($conditionArr);
     }
 
-    protected function createRJoinStr()
+    private function createRJoinStr()
     {
         return self::createJoinStr($this->rJoinInfo, 'RIGHT');
     }
 
-    protected function createWhereConditionStr()
+    private function createWhereConditionStr()
     {
         if (!empty($this->whereConditions)) {
             return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
@@ -135,7 +135,7 @@ class Select extends Operate
         return '';
     }
 
-    protected function createWhereJoinConditionValueArr()
+    private function createWhereJoinConditionValueArr()
     {
         return self::createConditionValueArr($this->whereConditions);
     }
