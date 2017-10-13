@@ -160,7 +160,7 @@ class Connection implements ConnectionInterface
 
     public static function getPdo($refreshConn = false)
     {
-        $pdo = self::$pdo;
+        $pdo = &self::$pdo;
         if (!$refreshConn && self::isPDOInstance($pdo)) {
             return $pdo;
         }
