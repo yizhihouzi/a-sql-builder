@@ -53,6 +53,12 @@ class Column
         return new Condition($this, $value, $relation, $groupName);
     }
 
+    public function alias(string $aliasName)
+    {
+        $this->alias = $aliasName;
+        return $this;
+    }
+
     public function colName()
     {
         return $this->col;
