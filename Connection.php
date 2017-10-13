@@ -158,9 +158,9 @@ class Connection implements ConnectionInterface
 
     private static $pdo;
 
-    protected static function getPdo($refreshConn = false)
+    public static function getPdo($refreshConn = false)
     {
-        $pdo = &self::$pdo;
+        $pdo = self::$pdo;
         if (!$refreshConn && self::isPDOInstance($pdo)) {
             return $pdo;
         }
@@ -189,6 +189,11 @@ TAG;
             }
             return false;
         }
+    }
+
+    public static function setPdo(PDO $pdo)
+    {
+        self::$pdo = $pdo;
     }
 
     protected static function isPdoStatement($stmt)
