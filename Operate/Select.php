@@ -32,12 +32,16 @@ class Select extends Operate
 
     public function createSelectColStr()
     {
-        $colsStrArr = [];
-        foreach ($this->fetchColumns as $column) {
-            /** @var Column $column */
-            $colsStrArr[] = $column->toSelectColStr();
+        if (!empty($this->fetchColumns)) {
+            $colsStrArr = [];
+            foreach ($this->fetchColumns as $column) {
+                /** @var Column $column */
+                $colsStrArr[] = $column->toSelectColStr();
+            }
+            return implode(',', $colsStrArr);
+        } else {
+            return '*';
         }
-        return implode(',', $colsStrArr);
     }
 
     public function where(Condition ...$conditions)
