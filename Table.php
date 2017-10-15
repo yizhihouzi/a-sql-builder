@@ -8,7 +8,7 @@
 
 namespace DBOperate;
 
-use DBOperate\Table\InformationSchemaColumns;
+use DBOperate\Table\InformationSchema;
 
 /**
  * Class Table
@@ -74,15 +74,17 @@ class Table
         return $this->cols;
     }
 
-    function __get($name)
+    public function __get($name)
     {
         if ($name == 'cols') {
             if (!isset(self::$tableCols[$this->tableName])) {
                 $cols                              =
-                    InformationSchemaColumns::getTableCols($this->tableName);
-                self::$tableCols[$this->tableName] = $cols;
+                    InformationSchema::getTableCols($this->tableName);
+                self::$tableCols[$this->tableName] = &$cols;
             }
             return self::$tableCols[$this->tableName];
+        } elseif (in_array($name, $this->cols)) {
+            return new Column($name, $this);
         }
     }
 
