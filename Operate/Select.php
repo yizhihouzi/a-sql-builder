@@ -20,6 +20,7 @@ class Select extends Operate
     private $limitStart, $limitEnd;
 
     private $groupByColumns  = [];
+    private $orderByInfo     = [];
     private $whereConditions = [];
     private $lJoinInfo       = [];
     private $rJoinInfo       = [];
@@ -32,12 +33,16 @@ class Select extends Operate
 
     public function createSelectColStr()
     {
-        $colsStrArr = [];
-        foreach ($this->fetchColumns as $column) {
-            /** @var Column $column */
-            $colsStrArr[] = $column->toSelectColStr();
+        if (!empty($this->fetchColumns)) {
+            $colsStrArr = [];
+            foreach ($this->fetchColumns as $column) {
+                /** @var Column $column */
+                $colsStrArr[] = $column->toSelectColStr();
+            }
+            return implode(',', $colsStrArr);
+        } else {
+            return '*';
         }
-        return implode(',', $colsStrArr);
     }
 
     public function where(Condition ...$conditions)
@@ -159,6 +164,20 @@ class Select extends Operate
         return $this;
     }
 
+    public function createOrderByStr()
+    {
+        if (empty($this->orderByInfo)) {
+            return '';
+        } else {
+            return 'ORDER BY ' . implode(',', $this->orderByInfo);
+        }
+    }
+
+    public function orderBy(Column $col, bool $asc = true)
+    {
+        $this->orderByInfo[] = "`{$col->colName()}`" . ($asc ? ' ASC' : ' DESC');
+    }
+
     public function limit(int $start, int $end)
     {
         $this->limitStart = $start;
@@ -173,7 +192,8 @@ class Select extends Operate
         $rJoinStr      = $this->createRJoinStr();
         $whereStr      = $this->createWhereConditionStr();
         $groupByColStr = $this->createGroupByColStr();
-        $preStr        = "SELECT $selectColStr FROM $tablesStr $lJoinStr $rJoinStr $whereStr $groupByColStr";
+        $orderByStr    = $this->createOrderByStr();
+        $preStr        = "SELECT $selectColStr FROM $tablesStr $lJoinStr $rJoinStr $whereStr $groupByColStr $orderByStr";
         if (is_int($this->limitStart) && is_int($this->limitEnd)) {
             $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
         }
