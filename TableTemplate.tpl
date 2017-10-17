@@ -8,6 +8,6 @@ class {{TABLE_CLASS_NAME}} extends Table
 {
     public function __construct()
     {
-        parent::__construct("{{TABLE_NAME}}");
+        parent::__construct('{{TABLE_NAME}}');
     }
 }
