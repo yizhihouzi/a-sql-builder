@@ -125,7 +125,7 @@ class Connection implements ConnectionInterface
     public static function commitTransaction($transactionId)
     {
         $pdo = self::getPdo();
-        if (($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
+        if (($transactionId !== false) && ($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
             return $pdo->commit();
         }
         return false;
@@ -134,8 +134,7 @@ class Connection implements ConnectionInterface
     public static function rollBackTransaction($transactionId)
     {
         $pdo = self::getPdo();
-        if (($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()
-        ) {
+        if (($transactionId !== false) && ($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
             return $pdo->rollBack();
         }
         return false;
