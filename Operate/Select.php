@@ -24,11 +24,18 @@ class Select extends Operate
     private $whereConditions = [];
     private $lJoinInfo       = [];
     private $rJoinInfo       = [];
+    private $forUpdate       = false;
 
     public function fetchCols(...$cols)
     {
         $this->fetchColumns = array_merge($this->fetchColumns, ArrayHelper::flatten($cols));
+        $this->fetchColumns = array_filter($this->fetchColumns);
         return $this;
+    }
+
+    public function forUpdate(bool $forUpdate)
+    {
+        $this->forUpdate = $forUpdate;
     }
 
     public function createSelectColStr()
@@ -196,6 +203,9 @@ class Select extends Operate
         $preStr        = "SELECT $selectColStr FROM $tablesStr $lJoinStr $rJoinStr $whereStr $groupByColStr $orderByStr";
         if (is_int($this->limitStart) && is_int($this->limitEnd)) {
             $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
+        }
+        if ($this->forUpdate) {
+            $preStr = "$preStr FOR UPDATE";
         }
         return $preStr;
     }
