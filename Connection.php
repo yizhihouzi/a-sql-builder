@@ -43,6 +43,11 @@ class Connection implements ConnectionInterface
         }
     }
 
+    public static function delete(Operate $delete)
+    {
+        return self::modifyData($delete);
+    }
+
     private static function modifyData(Operate $operate)
     {
         $stmt = self::execute($operate->prepareStr(), $operate->prepareValues());
