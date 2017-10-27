@@ -117,13 +117,13 @@ class Select extends Operate
 
     private function createLJoinConditionValueArr()
     {
-        $conditionArr = ArrayHelper::pluck($this->lJoinInfo, 1);
+        $conditionArr = array_column($this->lJoinInfo, 1);
         return self::createConditionValueArr($conditionArr);
     }
 
     private function createRJoinConditionValueArr()
     {
-        $conditionArr = ArrayHelper::pluck($this->rJoinInfo, 1);
+        $conditionArr = array_column($this->rJoinInfo, 1);
         return self::createConditionValueArr($conditionArr);
     }
 

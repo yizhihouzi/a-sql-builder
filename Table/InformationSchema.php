@@ -29,7 +29,7 @@ class InformationSchema
         $select->groupBy($tableNameColumn);
         $select->where(new Condition(new Column('TABLE_SCHEMA', $table), $schemaName));
         $rows = Connection::select($select);
-        return ArrayHelper::pluck($rows, 'TABLE_NAME');
+        return array_column($rows, 'TABLE_NAME');
     }
 
     public static function getTableCols($tableName, $schemaName = null)
@@ -44,6 +44,6 @@ class InformationSchema
         $condition2 = new Condition(new Column('table_name', $table), $tableName);
         $select->where($condition1, $condition2);
         $rows = Connection::select($select);
-        return ArrayHelper::pluck($rows, 'COLUMN_NAME');
+        return array_column($rows, 'COLUMN_NAME');
     }
 }
