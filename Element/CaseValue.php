@@ -60,7 +60,7 @@ class CaseValue implements Element
         if ($this->elseValue !== false) {
             $valuesStr = "$valuesStr ELSE " . (is_scalar($this->elseValue) ? '?' : $this->elseValue);
         }
-        return "$preStr $valuesStr";
+        return "$preStr $valuesStr END";
     }
 
     public function prepareValues()
