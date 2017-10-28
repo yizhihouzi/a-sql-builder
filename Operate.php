@@ -8,8 +8,7 @@
 
 namespace DBOperate;
 
-
-abstract class Operate
+abstract class Operate implements Element
 {
     protected $table;
 
