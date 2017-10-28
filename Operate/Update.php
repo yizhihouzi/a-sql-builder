@@ -11,6 +11,7 @@ namespace DBOperate\Operate;
 use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
+use DBOperate\Element;
 use DBOperate\Operate;
 use DBOperate\Table;
 
@@ -113,7 +114,7 @@ class Update extends Operate
             if ($isScalarValue) {
                 $colUpdateStrArr[] = "$colName=?";
             } else {
-                if ($value instanceof Select) {
+                if ($value instanceof Element) {
                     $valueStr          = $value->prepareStr();
                     $colUpdateStrArr[] = "$colName=($valueStr)";
                 } else if (is_null($value)) {
@@ -133,7 +134,7 @@ class Update extends Operate
             list(, $value) = $singleColumnUpdateInfo;
             $isScalarValue = is_scalar($value);
             if (!$isScalarValue) {
-                if ($value instanceof Select) {
+                if ($value instanceof Element) {
                     $colUpdateValueArr[] = $value->prepareValues();
                 }
             } else {
