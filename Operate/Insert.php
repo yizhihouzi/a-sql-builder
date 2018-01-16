@@ -14,9 +14,10 @@ class Insert extends Operate
 {
     private $insertInfo           = [];
     private $onDuplicateKeyUpdate = [];
+    private $replaceInstead       = false;
 
     /**
-     * @param array $cols  由Column列对象组成的数组
+     * @param array $cols         由Column列对象组成的数组
      * @param array ...$valuesArr $valuesArr要么为一个Select对象，要么包含与$cols列对应的值数组，如：
      *                            [[$col1v1,$col2v1],[$col1v2,$col2v2]...]
      *
@@ -26,6 +27,11 @@ class Insert extends Operate
     {
         $this->insertInfo = [$cols, $valuesArr];
         return $this;
+    }
+
+    public function replaceInstead($replace = true)
+    {
+        $this->replaceInstead = $replace;
     }
 
     public function onDuplicateKeyUpdate(array $cols, array $values)
@@ -128,7 +134,8 @@ class Insert extends Operate
         $table                   = (string)$this->table;
         $insertColStr            = $this->createInsertColStr();
         $onDuplicateKeyUpdateStr = $this->createOnDuplicateKeyUpdateStr();
-        return "INSERT INTO $table $insertColStr $onDuplicateKeyUpdateStr";
+        $operator                = $this->replaceInstead ? 'REPLACE INTO' : 'INSERT INTO';
+        return "$operator $table $insertColStr $onDuplicateKeyUpdateStr";
     }
 
     public function prepareValues()
