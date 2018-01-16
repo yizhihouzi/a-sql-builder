@@ -63,7 +63,8 @@ class Select extends Operate
     public function matchAgainst(bool $boolMode, string $searchText, Column ...$cols)
     {
         $matchMode       = $boolMode ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
-        $this->matchInfo = ['matchMode' => $matchMode, 'searchText' => $searchText, 'index' => $cols];
+        $index           = implode(',', $cols);
+        $this->matchInfo = ['matchMode' => $matchMode, 'searchText' => $searchText, 'index' => $index];
     }
 
     public function join(Table $table, Condition ...$conditions)
@@ -123,9 +124,8 @@ class Select extends Operate
             $conditionStr = self::createConditionArrStr($this->whereConditions);
         }
         if (!empty($this->matchInfo)) {
-            $index     = implode(',', $this->matchInfo['cols']);
-            $matchMode = $this->matchInfo['matchMode'];
-            $matchStr  = "MATCH($index) AGAINST (? $matchMode)";
+            ['matchMode' => $matchMode, 'index' => $index] = $this->matchInfo;
+            $matchStr = "MATCH($index) AGAINST (? $matchMode)";
         }
         if (isset($conditionStr)) {
             $whereStr = 'WHERE ' . $conditionStr;
