@@ -26,6 +26,7 @@ class Select extends Operate
     private $lJoinInfo       = [];
     private $rJoinInfo       = [];
     private $forUpdate       = false;
+    private $matchInfo       = null;
 
     public function fetchCols(...$cols)
     {
@@ -57,6 +58,12 @@ class Select extends Operate
     {
         $this->whereConditions = array_merge($this->whereConditions, $conditions);
         return $this;
+    }
+
+    public function matchAgainst(bool $boolMode, string $searchText, Column ...$cols)
+    {
+        $matchMode       = $boolMode ? 'IN BOOLEAN MODE' : 'IN NATURAL LANGUAGE MODE';
+        $this->matchInfo = ['matchMode' => $matchMode, 'searchText' => $searchText, 'index' => $cols];
     }
 
     public function join(Table $table, Condition ...$conditions)
@@ -113,14 +120,29 @@ class Select extends Operate
     private function whereConditionStr()
     {
         if (!empty($this->whereConditions)) {
-            return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
+            $conditionStr = self::createConditionArrStr($this->whereConditions);
         }
-        return '';
+        if (!empty($this->matchInfo)) {
+            $index     = implode(',', $this->matchInfo['cols']);
+            $matchMode = $this->matchInfo['matchMode'];
+            $matchStr  = "MATCH($index) AGAINST (? $matchMode)";
+        }
+        if (isset($conditionStr)) {
+            $whereStr = 'WHERE ' . $conditionStr;
+        }
+        if (isset($matchStr)) {
+            $whereStr = isset($whereStr) ? "$whereStr AND $matchStr" : "WHERE $matchStr";
+        }
+        return $whereStr ?? '';
     }
 
     private function whereConditionValueArr()
     {
-        return self::createConditionValueArr($this->whereConditions);
+        $whereConditionValueArr = self::createConditionValueArr($this->whereConditions);
+        if (!empty($this->matchInfo)) {
+            $whereConditionValueArr[] = $this->matchInfo['searchText'];
+        }
+        return $whereConditionValueArr;
     }
 
     public function groupByColStr()
