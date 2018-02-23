@@ -37,7 +37,7 @@ class Column
     {
         $col = null;
         if (($this->table) instanceof Table) {
-            $tableName = (string)$this->table;
+            $tableName = $this->table->name();
             $col       = "$tableName.`$this->col`";
         } else {
             $col = $this->col;
@@ -78,7 +78,7 @@ class Column
     {
         $col = null;
         if (($this->table) instanceof Table) {
-            $tableName = (string)$this->table;
+            $tableName = $this->table->name();
             $col       = "$tableName.`$this->col`";
         } else {
             $col = $this->col;

@@ -44,6 +44,9 @@ class InformationSchema
         $condition2 = new Condition(new Column('table_name', $table), $tableName);
         $select->where($condition1, $condition2);
         $rows = Connection::select($select);
+        if (!is_array($rows)) {
+            return false;
+        }
         return array_column($rows, 'COLUMN_NAME');
     }
 }

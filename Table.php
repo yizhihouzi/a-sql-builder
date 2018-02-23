@@ -23,20 +23,25 @@ class Table
      */
     private static $tableCols = [];
     private        $tableName;
+    private        $tableAliasName;
 
     /**
      * Table constructor.
      *
      * @param string $table
-     *
-     * @internal param string $alias
      */
     public function __construct(string $table)
     {
         $this->tableName = $table;
     }
 
-    public function columnObjArr(array $cols = null, $invert = false): array
+    /**
+     * @param array|null $cols
+     * @param bool       $invert
+     *
+     * @return array|bool
+     */
+    public function columnObjArr(array $cols = null, $invert = false)
     {
         $cols       = is_array($cols) ? $cols : [];
         $colNameArr = [];
@@ -58,6 +63,9 @@ class Table
         } else {
             $colNameArr = $this->cols;
         }
+        if (!is_array($colNameArr)) {
+            return false;
+        }
         $columnObjArr = [];
         foreach ($colNameArr as $v) {
             if (!array_key_exists($v, $cols)) {
@@ -67,6 +75,19 @@ class Table
             }
         }
         return $columnObjArr;
+    }
+
+    public function withName(string $name)
+    {
+        $new                 = clone $this;
+        $new->tableAliasName = trim($name, '`');
+        return $new;
+    }
+
+    public function name()
+    {
+        $name = $this->tableAliasName ?? $this->tableName;
+        return "`$name`";
     }
 
     public function cols()
@@ -105,6 +126,7 @@ class Table
 
     function __toString()
     {
-        return "`$this->tableName`";
+        $aliasName = (!empty($this->tableAliasName)) ? " `$this->tableAliasName`" : '';
+        return "`$this->tableName`$aliasName";
     }
 }
