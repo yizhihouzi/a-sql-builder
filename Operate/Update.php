@@ -12,6 +12,7 @@ use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
 use DBOperate\Element;
+use DBOperate\Exception\InvalidArgumentException;
 use DBOperate\Operate;
 use DBOperate\Table;
 
@@ -106,6 +107,9 @@ class Update extends Operate
 
     private function createUpdateColStr()
     {
+        if (empty($this->columnUpdateInfo)) {
+            throw new InvalidArgumentException('there must be some update column while update-operate.');
+        }
         $colUpdateStrArr = [];
         foreach ($this->columnUpdateInfo as $singleColumnUpdateInfo) {
             list($col, $value) = $singleColumnUpdateInfo;
