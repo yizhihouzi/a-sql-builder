@@ -9,7 +9,10 @@
 namespace DBOperate;
 
 use PDO;
+use PDOException;
 use PDOStatement;
+use RuntimeException;
+use UnexpectedValueException;
 
 /**
  * Class ModelBase
@@ -17,47 +20,35 @@ use PDOStatement;
  */
 class Connection implements ConnectionInterface
 {
-    public static function insert(Operate $insert)
+    public static function insert(Operate $insert): int
     {
         return self::modifyData($insert);
     }
 
-    public static function update(Operate $update)
+    public static function update(Operate $update): int
     {
         return self::modifyData($update);
     }
 
-    public static function select(Operate $select, bool $singleRow = false)
-    {
-        $stmt = self::execute($select->prepareStr(), $select->prepareValues());
-        if (self::isPdoStatement($stmt)) {
-            if (!$singleRow) {
-                $result = $stmt->fetchAll();
-            } else {
-                $result = $stmt->fetch();
-            }
-            $stmt->closeCursor();
-            return $result;
-        } else {
-            return false;
-        }
-    }
-
-    public static function delete(Operate $delete)
+    public static function delete(Operate $delete): int
     {
         return self::modifyData($delete);
     }
 
-    private static function modifyData(Operate $operate)
+    public static function select(Operate $select, bool $singleRow = false):?array
     {
-        $stmt = self::execute($operate->prepareStr(), $operate->prepareValues());
-        if (self::isPdoStatement($stmt)) {
-            $affectNum = $stmt->rowCount();
-            $stmt->closeCursor();
-            return (int)$affectNum;
-        } else {
-            return false;
-        }
+        $stmt   = self::execute($select->prepareStr(), $select->prepareValues());
+        $result = $stmt->fetchAll();
+        $stmt->closeCursor();
+        return $singleRow ? ($result[0] ?? null) : $result;
+    }
+
+    private static function modifyData(Operate $operate): int
+    {
+        $stmt      = self::execute($operate->prepareStr(), $operate->prepareValues());
+        $affectNum = $stmt->rowCount();
+        $stmt->closeCursor();
+        return $affectNum;
     }
 
     /**
@@ -66,42 +57,42 @@ class Connection implements ConnectionInterface
      * @param int        $curExeTime
      * @param int        $maxReExeTimes
      *
-     * @return bool|PDOStatement
+     * @return PDOStatement
      */
     protected static function execute(
         string $preStr,
         array $inputParams,
         $curExeTime = 0,
         $maxReExeTimes = 2
-    ) {
+    ): PDOStatement {
         $pdo = self::getPdo();
-        if (!self::isPDOInstance($pdo)) {
-            return false;
-        }
         try {
-            $stmt     = @$pdo->prepare($preStr);
+            $stmt     = $pdo->prepare($preStr);
             $exeState = $stmt->execute($inputParams);
             if ($exeState === true) {
                 return $stmt;
             } else {
                 $err['sql']   = $stmt->queryString;
                 $err['input'] = $inputParams;
-            }
-        } catch (\PDOException $e) {
-            if ($e->errorInfo[1] == 2006 || $e->errorInfo[1] == 2013 && ++$curExeTime < $maxReExeTimes) {
-                $pdo = self::getPdo(true);
-                if (self::isPDOInstance($pdo)) {
-                    return self::execute($preStr, $inputParams, $curExeTime);
+                if (!empty(self::$logger) && is_callable([self::$logger, 'error'])) {
+                    self::$logger->error(json_encode($err));
                 }
+                throw new RuntimeException(json_encode($err));
             }
-            $err['statement'] = $preStr;
-            $err['input']     = $inputParams;
-            $err['exception'] = $e->errorInfo;
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 2006 || $e->errorInfo[1] == 2013 && ++$curExeTime < $maxReExeTimes) {
+                self::getPdo(true);
+                return self::execute($preStr, $inputParams, $curExeTime);
+            } else {
+                $err['statement'] = $preStr;
+                $err['input']     = $inputParams;
+                $err['exception'] = $e->errorInfo;
+                if (!empty(self::$logger) && is_callable([self::$logger, 'error'])) {
+                    self::$logger->error(json_encode($err));
+                }
+                throw new RuntimeException(json_encode($err));
+            }
         }
-        if (!empty(self::$logger) && is_callable([self::$logger, 'debug'])) {
-            self::$logger->debug(json_encode($err));
-        }
-        return false;
     }
 
     private static $transactionId;
@@ -114,13 +105,13 @@ class Connection implements ConnectionInterface
     public static function beginTransaction()
     {
         $pdo = self::getPdo();
-        if (self::isPDOInstance($pdo) && !$pdo->inTransaction()) {
+        if (!$pdo->inTransaction()) {
             try {
                 $beginStatus = $pdo->beginTransaction();
                 if ($beginStatus) {
                     return self::$transactionId = uniqid();
                 }
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 return false;
             }
         }
@@ -130,7 +121,7 @@ class Connection implements ConnectionInterface
     public static function commitTransaction($transactionId)
     {
         $pdo = self::getPdo();
-        if (($transactionId !== false) && ($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
+        if (($transactionId !== false) && ($transactionId == self::$transactionId) && $pdo->inTransaction()) {
             return $pdo->commit();
         }
         return false;
@@ -139,7 +130,7 @@ class Connection implements ConnectionInterface
     public static function rollBackTransaction($transactionId)
     {
         $pdo = self::getPdo();
-        if (($transactionId !== false) && ($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
+        if (($transactionId !== false) && ($transactionId == self::$transactionId) && $pdo->inTransaction()) {
             return $pdo->rollBack();
         }
         return false;
@@ -147,12 +138,9 @@ class Connection implements ConnectionInterface
 
     public static function getLastInsertId()
     {
-        $pdo = self::getPdo();
-        if (self::isPDOInstance($pdo)) {
-            $lastInsertId = $pdo->lastInsertId();
-            return is_numeric($lastInsertId) ? ((int)$lastInsertId) : $lastInsertId;
-        }
-        return false;
+        $pdo          = self::getPdo();
+        $lastInsertId = $pdo->lastInsertId();
+        return is_numeric($lastInsertId) ? ((int)$lastInsertId) : $lastInsertId;
     }
 
     public static function closeTransactionWhenRequestClose()
@@ -160,9 +148,18 @@ class Connection implements ConnectionInterface
         self::rollBackTransaction(self::$transactionId);
     }
 
+    /**
+     * @var PDO
+     */
     private static $pdo;
 
-    public static function getPdo($refreshConn = false)
+    /**
+     * @param bool $refreshConn
+     *
+     * @return PDO
+     * @throws UnexpectedValueException|PDOException
+     */
+    public static function getPdo($refreshConn = false): PDO
     {
         $pdo = &self::$pdo;
         if (!$refreshConn && self::isPDOInstance($pdo)) {
@@ -170,7 +167,7 @@ class Connection implements ConnectionInterface
         }
         $pdo = null;
         if (empty(self::$config)) {
-            throw new \UnexpectedValueException("self::\$config is null.");
+            throw new UnexpectedValueException("self::\$config is null.");
         }
         $config     = self::$config;
         $dsn        = <<<TAG
@@ -187,11 +184,11 @@ TAG;
         try {
             $instance = new PDO($dsn, $config['user'], $config['pwd'], $pdoOptions);
             return $pdo = $instance;
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             if (!empty(self::$logger) && is_callable([self::$logger, 'emergency'])) {
                 self::$logger->emergency(json_encode($e->getMessage()));
             }
-            return false;
+            throw $e;
         }
     }
 
