@@ -90,6 +90,9 @@ class Connection implements ConnectionInterface
                 if (!empty(self::$logger) && is_callable([self::$logger, 'error'])) {
                     self::$logger->error(json_encode($err));
                 }
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 throw new RuntimeException(json_encode($err));
             }
         }
