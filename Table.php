@@ -107,6 +107,7 @@ class Table
         } elseif (in_array($colName = self::unCamelize($name), $this->cols)) {
             return new Column($colName, $this);
         }
+        return null;
     }
 
     /**

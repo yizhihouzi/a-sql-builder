@@ -8,7 +8,6 @@
 
 namespace DBOperate\Table;
 
-use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
 use DBOperate\Connection;

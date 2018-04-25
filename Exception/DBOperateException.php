@@ -8,7 +8,7 @@
 
 namespace DBOperate\Exception;
 
-class InvalidArgumentException extends \InvalidArgumentException
+class DBOperateException extends \RuntimeException
 {
 
 }

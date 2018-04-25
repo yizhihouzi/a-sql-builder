@@ -12,7 +12,7 @@ use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
 use DBOperate\Element;
-use DBOperate\Exception\InvalidArgumentException;
+use DBOperate\Exception\DBOperateException;
 use DBOperate\Operate;
 use DBOperate\Table;
 
@@ -58,7 +58,7 @@ class Update extends Operate
                     $values[] = $v;
                 }
             } else {
-                throw new \Exception("$condition can not transform to Condition type");
+                throw new DBOperateException("$condition can not transform to Condition type");
             }
         }
         return ArrayHelper::flatten($values);
@@ -74,7 +74,7 @@ class Update extends Operate
             if ($condition instanceof Condition) {
                 $conditionGroup[$condition->getGroupName()][] = (string)$condition;
             } else {
-                throw new \Exception("$condition can not transform to Condition type");
+                throw new DBOperateException("$condition can not transform to Condition type");
             }
         }
         foreach ($conditionGroup as $key => $item) {
@@ -108,7 +108,7 @@ class Update extends Operate
     private function createUpdateColStr()
     {
         if (empty($this->columnUpdateInfo)) {
-            throw new InvalidArgumentException('there must be some update column while update-operate.');
+            throw new DBOperateException('there must be some update column while update-operate.');
         }
         $colUpdateStrArr = [];
         foreach ($this->columnUpdateInfo as $singleColumnUpdateInfo) {

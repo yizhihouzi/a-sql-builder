@@ -11,6 +11,7 @@ namespace DBOperate\Operate;
 use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
+use DBOperate\Exception\DBOperateException;
 use DBOperate\Operate;
 
 class Delete extends Operate
@@ -35,7 +36,7 @@ class Delete extends Operate
             if ($condition instanceof Condition) {
                 $conditionGroup[$condition->getGroupName()][] = (string)$condition;
             } else {
-                throw new \Exception("$condition can not transform to Condition type");
+                throw new DBOperateException("$condition can not transform to Condition type");
             }
         }
         foreach ($conditionGroup as $key => $item) {
@@ -54,7 +55,7 @@ class Delete extends Operate
                     $values[] = $v;
                 }
             } else {
-                throw new \Exception("$condition can not transform to Condition type");
+                throw new DBOperateException("$condition can not transform to Condition type");
             }
         }
         return ArrayHelper::flatten($values);

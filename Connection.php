@@ -8,10 +8,10 @@
 
 namespace DBOperate;
 
+use DBOperate\Exception\DBOperateException;
 use PDO;
 use PDOException;
 use PDOStatement;
-use RuntimeException;
 use UnexpectedValueException;
 
 /**
@@ -77,7 +77,7 @@ class Connection implements ConnectionInterface
                 if (!empty(self::$logger) && is_callable([self::$logger, 'error'])) {
                     self::$logger->error(json_encode($err));
                 }
-                throw new RuntimeException(json_encode($err));
+                throw new DBOperateException(json_encode($err));
             }
         } catch (PDOException $e) {
             if ($e->errorInfo[1] == 2006 || $e->errorInfo[1] == 2013 && ++$curExeTime < $maxReExeTimes) {
@@ -90,51 +90,59 @@ class Connection implements ConnectionInterface
                 if (!empty(self::$logger) && is_callable([self::$logger, 'error'])) {
                     self::$logger->error(json_encode($err));
                 }
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-                throw new RuntimeException(json_encode($err));
+                throw new DBOperateException(json_encode($err));
             }
         }
     }
 
+    /**
+     * @var string|null
+     */
     private static $transactionId;
 
     /**
      * 开启一个事务，成功返回事务ID；失败返回false
      * 只有凭相应的事务ID才可以关闭这个事务，解决事务嵌套问题
-     * @return bool|int
+     * @return null|string
      */
-    public static function beginTransaction()
+    public static function beginTransaction():?string
     {
         $pdo = self::getPdo();
         if (!$pdo->inTransaction()) {
-            try {
-                $beginStatus = $pdo->beginTransaction();
-                if ($beginStatus) {
-                    return self::$transactionId = uniqid();
+            $beginStatus = $pdo->beginTransaction();
+            if ($beginStatus) {
+                return self::$transactionId = uniqid();
+            }
+        }
+        return null;
+    }
+
+    public static function commitTransaction($transactionId): bool
+    {
+        if (($transactionId !== null) && ($transactionId === self::$transactionId)) {
+            $pdo = self::getPdo();
+            if ($pdo->inTransaction()) {
+                $status = $pdo->commit();
+                if ($status) {
+                    self::$transactionId = null;
                 }
-            } catch (PDOException $e) {
-                return false;
+                return $status;
             }
         }
         return false;
     }
 
-    public static function commitTransaction($transactionId)
+    public static function rollBackTransaction($transactionId): bool
     {
-        $pdo = self::getPdo();
-        if (($transactionId !== false) && ($transactionId == self::$transactionId) && $pdo->inTransaction()) {
-            return $pdo->commit();
-        }
-        return false;
-    }
-
-    public static function rollBackTransaction($transactionId)
-    {
-        $pdo = self::getPdo();
-        if (($transactionId !== false) && ($transactionId == self::$transactionId) && $pdo->inTransaction()) {
-            return $pdo->rollBack();
+        if (($transactionId !== null) && ($transactionId === self::$transactionId)) {
+            $pdo = self::getPdo();
+            if ($pdo->inTransaction()) {
+                $status = $pdo->rollBack();
+                if ($status) {
+                    self::$transactionId = null;
+                }
+                return $status;
+            }
         }
         return false;
     }
@@ -146,9 +154,13 @@ class Connection implements ConnectionInterface
         return is_numeric($lastInsertId) ? ((int)$lastInsertId) : $lastInsertId;
     }
 
-    public static function closeTransactionWhenRequestClose()
+    public static function forceCloseTransaction(): bool
     {
-        self::rollBackTransaction(self::$transactionId);
+        $pdo = self::getPdo();
+        if ($pdo->inTransaction()) {
+            return $pdo->rollBack();
+        }
+        return false;
     }
 
     /**
@@ -195,24 +207,24 @@ TAG;
         }
     }
 
-    public static function setPdo(PDO $pdo)
+    public static function setPdo(PDO $pdo): void
     {
         self::$pdo = $pdo;
     }
 
-    protected static function isPdoStatement($stmt)
+    protected static function isPdoStatement($stmt): bool
     {
         return $stmt instanceof PDOStatement;
     }
 
-    protected static function isPDOInstance($pdo)
+    protected static function isPDOInstance($pdo): bool
     {
         return $pdo instanceof PDO;
     }
 
     private static $logger = null;
 
-    public static function setLogger($logger)
+    public static function setLogger($logger): void
     {
         self::$logger = $logger;
     }
@@ -223,13 +235,15 @@ TAG;
     /**
      * @param mixed $config
      */
-    public static function setConfig($config)
+    public static function setConfig(array $config): void
     {
-        self::$config = $config;
+        if (!(is_string($config['driver'] ?? false) && is_string($config['host'] ?? false) && is_string($config['port'] ?? false) && is_string($config['db'] ?? false) && is_string($config['charset'] ?? false) && is_string($config['user'] ?? false) && is_string($config['pwd'] ?? false))) {
+            self::$config = $config;
+        }
     }
 
-    public static function getSchemaName()
+    public static function getSchemaName(): ?string
     {
-        return self::$config['db'];
+        return self::$config['db'] ?? null;
     }
 }
