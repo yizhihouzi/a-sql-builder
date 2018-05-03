@@ -237,7 +237,7 @@ TAG;
      */
     public static function setConfig(array $config): void
     {
-        if (!(is_string($config['driver'] ?? false) && is_string($config['host'] ?? false) && is_string($config['port'] ?? false) && is_string($config['db'] ?? false) && is_string($config['charset'] ?? false) && is_string($config['user'] ?? false) && is_string($config['pwd'] ?? false))) {
+        if (!(is_string($config['driver'] ?? false) && is_string($config['host'] ?? false) && is_numeric($config['port'] ?? false) && is_string($config['db'] ?? false) && is_string($config['charset'] ?? false) && is_string($config['user'] ?? false) && is_string($config['pwd'] ?? false))) {
             throw new UnexpectedValueException("the config array must have all of these keys,`driver`,`host`,`port`,`db`,`charset`,`user`,`pwd`.");
         }
         self::$config = $config;
