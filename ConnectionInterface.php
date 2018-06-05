@@ -8,6 +8,11 @@
 
 namespace DBOperate;
 
+use DBOperate\Operate\Delete;
+use DBOperate\Operate\Insert;
+use DBOperate\Operate\Select;
+use DBOperate\Operate\Update;
+
 /**
  * Class Connection
  */
@@ -15,9 +20,11 @@ interface ConnectionInterface
 {
     static function getSchemaName();
 
-    static function select(Operate $operate);
+    static function select(Select $operate): array;
 
-    static function update(Operate $operate);
+    static function update(Update $operate): int;
 
-    static function insert(Operate $operate);
+    static function insert(Insert $operate): int;
+
+    static function delete(Delete $operate): int;
 }

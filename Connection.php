@@ -9,6 +9,10 @@
 namespace DBOperate;
 
 use DBOperate\Exception\DBOperateException;
+use DBOperate\Operate\Delete;
+use DBOperate\Operate\Insert;
+use DBOperate\Operate\Select;
+use DBOperate\Operate\Update;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -20,27 +24,34 @@ use UnexpectedValueException;
  */
 class Connection implements ConnectionInterface
 {
-    public static function insert(Operate $insert): int
+    public static function insert(Insert $insert): int
     {
         return self::modifyData($insert);
     }
 
-    public static function update(Operate $update): int
+    public static function update(Update $update): int
     {
         return self::modifyData($update);
     }
 
-    public static function delete(Operate $delete): int
+    public static function delete(Delete $delete): int
     {
         return self::modifyData($delete);
     }
 
-    public static function select(Operate $select, bool $singleRow = false):?array
+    public static function select(Select $select): array
     {
         $stmt   = self::execute($select->prepareStr(), $select->prepareValues());
         $result = $stmt->fetchAll();
         $stmt->closeCursor();
-        return $singleRow ? ($result[0] ?? null) : $result;
+        return $result;
+    }
+
+    public static function selectFirst(Select $select):?array
+    {
+        $select->limit(0, 1);
+        $result = self::select($select);
+        return $result[0] ?? null;
     }
 
     private static function modifyData(Operate $operate): int
