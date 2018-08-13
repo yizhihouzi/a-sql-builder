@@ -1,0 +1,6 @@
+vendor
+test*.*
+.idea/
+log/
+.phpunit.result.cache
+Tests/test.sqlite

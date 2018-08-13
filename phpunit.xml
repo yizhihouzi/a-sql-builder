@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<phpunit colors="false" bootstrap="Tests/autoload.php"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutChangesToGlobalState="true">
+    <testsuites>
+        <testsuite name="t">
+            <directory>Tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

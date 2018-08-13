@@ -39,6 +39,21 @@ class Insert extends Operate
         $this->onDuplicateKeyUpdate = [$cols, $values];
     }
 
+    /**
+     * @return string
+     */
+    public function prepareStr()
+    {
+        $table                   = (string)$this->table;
+        $insertColStr            = $this->createInsertColStr();
+        $onDuplicateKeyUpdateStr = $this->createOnDuplicateKeyUpdateStr();
+        $operator                = $this->replaceInstead ? 'REPLACE INTO' : 'INSERT INTO';
+        return "$operator $table $insertColStr $onDuplicateKeyUpdateStr";
+    }
+
+    /**
+     * @return bool|string
+     */
     private function createInsertColStr()
     {
         if (empty($this->insertInfo)) {
@@ -71,6 +86,39 @@ class Insert extends Operate
         return "$colStr VALUES $valuesStr";
     }
 
+    private function createOnDuplicateKeyUpdateStr()
+    {
+        if (empty($this->onDuplicateKeyUpdate)) {
+            return false;
+        }
+        $keyPairArr = [];
+        list($cols, $values) = $this->onDuplicateKeyUpdate;
+        foreach ($values as $v) {
+            $col = array_shift($cols);
+            if (is_scalar($v)) {
+                $keyPairArr[] = "$col=?";
+            } elseif (is_null($v)) {
+                $keyPairArr[] = "$col=null";
+            } else {
+                $keyPairArr[] = "$col=$v";
+            }
+        }
+        return 'ON DUPLICATE KEY UPDATE ' . implode(',', $keyPairArr);
+    }
+
+    /**
+     * @return array
+     */
+    public function prepareValues()
+    {
+        $insertPrepareValues        = $this->createInsertColValues();
+        $onDuplicateKeyUpdateValues = $this->createOnDuplicateKeyUpdateValues();
+        return array_merge($insertPrepareValues, $onDuplicateKeyUpdateValues ?: []);
+    }
+
+    /**
+     * @return array|bool
+     */
     private function createInsertColValues()
     {
         if (empty($this->insertInfo)) {
@@ -94,26 +142,6 @@ class Insert extends Operate
         return $prepareValues;
     }
 
-    private function createOnDuplicateKeyUpdateStr()
-    {
-        if (empty($this->onDuplicateKeyUpdate)) {
-            return false;
-        }
-        $keyPairArr = [];
-        list($cols, $values) = $this->onDuplicateKeyUpdate;
-        foreach ($values as $v) {
-            $col = array_shift($cols);
-            if (is_scalar($v)) {
-                $keyPairArr[] = "$col=?";
-            } elseif (is_null($v)) {
-                $keyPairArr[] = "$col=null";
-            } else {
-                $keyPairArr[] = "$col=$v";
-            }
-        }
-        return 'ON DUPLICATE KEY UPDATE ' . implode(',', $keyPairArr);
-    }
-
     private function createOnDuplicateKeyUpdateValues()
     {
         if (empty($this->onDuplicateKeyUpdate)) {
@@ -127,21 +155,5 @@ class Insert extends Operate
             }
         }
         return $prepareValues;
-    }
-
-    public function prepareStr()
-    {
-        $table                   = (string)$this->table;
-        $insertColStr            = $this->createInsertColStr();
-        $onDuplicateKeyUpdateStr = $this->createOnDuplicateKeyUpdateStr();
-        $operator                = $this->replaceInstead ? 'REPLACE INTO' : 'INSERT INTO';
-        return "$operator $table $insertColStr $onDuplicateKeyUpdateStr";
-    }
-
-    public function prepareValues()
-    {
-        $insertPrepareValues        = $this->createInsertColValues();
-        $onDuplicateKeyUpdateValues = $this->createOnDuplicateKeyUpdateValues();
-        return array_merge($insertPrepareValues, $onDuplicateKeyUpdateValues ?: []);
     }
 }

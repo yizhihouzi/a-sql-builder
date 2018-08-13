@@ -12,7 +12,7 @@ use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
 use DBOperate\Element;
-use DBOperate\Exception\InvalidArgumentException;
+use DBOperate\Exception\DBOperateException;
 use DBOperate\Operate;
 use DBOperate\Table;
 
@@ -48,52 +48,20 @@ class Update extends Operate
         $this->limitEnd   = $end;
     }
 
-    private static function createConditionValueArr(...$conditionArr)
+    /**
+     * @return string
+     * @throws DBOperateException
+     */
+    public function prepareStr()
     {
-        $values       = [];
-        $conditionArr = ArrayHelper::flatten($conditionArr);
-        foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                if (($v = $condition->getValue()) !== false) {
-                    $values[] = $v;
-                }
-            } else {
-                throw new \Exception("$condition can not transform to Condition type");
-            }
+        $tablesStr    = self::createTablesStr();
+        $updateColStr = $this->createUpdateColStr();
+        $whereStr     = $this->createWhereConditionStr();
+        $preStr       = "UPDATE $tablesStr $updateColStr $whereStr";
+        if (is_int($this->limitStart) && is_int($this->limitEnd)) {
+            $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
         }
-        return ArrayHelper::flatten($values);
-    }
-
-    private static function createConditionArrStr(array $conditionArr)
-    {
-        if (empty($conditionArr)) {
-            return '1';
-        }
-        $conditionGroup = [];
-        foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
-            } else {
-                throw new \Exception("$condition can not transform to Condition type");
-            }
-        }
-        foreach ($conditionGroup as $key => $item) {
-            $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
-        }
-        return implode(' OR ', $conditionGroup);
-    }
-
-    private function createWhereConditionStr()
-    {
-        if (!empty($this->whereConditions)) {
-            return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
-        }
-        return '';
-    }
-
-    private function createWhereJoinConditionValueArr()
-    {
-        return self::createConditionValueArr($this->whereConditions);
+        return $preStr;
     }
 
     public function createTablesStr()
@@ -105,10 +73,14 @@ class Update extends Operate
         return $this->table;
     }
 
+    /**
+     * @return string
+     * @throws DBOperateException
+     */
     private function createUpdateColStr()
     {
         if (empty($this->columnUpdateInfo)) {
-            throw new InvalidArgumentException('there must be some update column while update-operate.');
+            DBOperateException::nonUpdateColumn();
         }
         $colUpdateStrArr = [];
         foreach ($this->columnUpdateInfo as $singleColumnUpdateInfo) {
@@ -131,6 +103,49 @@ class Update extends Operate
         return 'SET ' . implode(',', $colUpdateStrArr);
     }
 
+    /**
+     * @return string
+     */
+    private function createWhereConditionStr()
+    {
+        if (!empty($this->whereConditions)) {
+            return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
+        }
+        return '';
+    }
+
+    /**
+     * @param array $conditionArr
+     *
+     * @return string
+     */
+    private static function createConditionArrStr(array $conditionArr)
+    {
+        if (empty($conditionArr)) {
+            return '1';
+        }
+        $conditionGroup = [];
+        foreach ($conditionArr as $condition) {
+            if ($condition instanceof Condition) {
+                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
+            }
+        }
+        foreach ($conditionGroup as $key => $item) {
+            $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
+        }
+        return implode(' OR ', $conditionGroup);
+    }
+
+    /**
+     * @return array
+     */
+    public function prepareValues()
+    {
+        $updatePrepareValues  = $this->createUpdateColValues();
+        $whereConditionValues = $this->createWhereJoinConditionValueArr();
+        return array_merge($updatePrepareValues, $whereConditionValues);
+    }
+
     private function createUpdateColValues()
     {
         $colUpdateValueArr = [];
@@ -148,22 +163,30 @@ class Update extends Operate
         return ArrayHelper::flatten($colUpdateValueArr);
     }
 
-    public function prepareStr()
+    /**
+     * @return array
+     */
+    private function createWhereJoinConditionValueArr()
     {
-        $tablesStr    = self::createTablesStr();
-        $updateColStr = $this->createUpdateColStr();
-        $whereStr     = $this->createWhereConditionStr();
-        $preStr       = "UPDATE $tablesStr $updateColStr $whereStr";
-        if (is_int($this->limitStart) && is_int($this->limitEnd)) {
-            $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
-        }
-        return $preStr;
+        return self::createConditionValueArr($this->whereConditions);
     }
 
-    public function prepareValues()
+    /**
+     * @param array ...$conditionArr
+     *
+     * @return array
+     */
+    private static function createConditionValueArr(...$conditionArr)
     {
-        $updatePrepareValues  = $this->createUpdateColValues();
-        $whereConditionValues = $this->createWhereJoinConditionValueArr();
-        return array_merge($updatePrepareValues, $whereConditionValues);
+        $values       = [];
+        $conditionArr = ArrayHelper::flatten($conditionArr);
+        foreach ($conditionArr as $condition) {
+            if ($condition instanceof Condition) {
+                if (($v = $condition->getValue()) !== false) {
+                    $values[] = $v;
+                }
+            }
+        }
+        return ArrayHelper::flatten($values);
     }
 }

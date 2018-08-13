@@ -8,8 +8,6 @@
 
 namespace DBOperate;
 
-use DBOperate\Table\InformationSchema;
-
 /**
  * Class Table
  * @property array cols
@@ -17,13 +15,8 @@ use DBOperate\Table\InformationSchema;
  */
 class Table
 {
-    /**
-     * eg:['table1'=>['col1','col2'],'table2'=>['col1','col2']]
-     * @var array
-     */
-    private static $tableCols = [];
-    private        $tableName;
-    private        $tableAliasName;
+    private $tableName;
+    private $tableAliasName;
 
     /**
      * Table constructor.
@@ -90,38 +83,9 @@ class Table
         return "`$name`";
     }
 
-    public function cols()
+    public function __get($colName)
     {
-        return $this->cols;
-    }
-
-    public function __get($name)
-    {
-        if ($name == 'cols') {
-            if (!isset(self::$tableCols[$this->tableName])) {
-                $cols                              =
-                    InformationSchema::getTableCols($this->tableName);
-                self::$tableCols[$this->tableName] = &$cols;
-            }
-            return self::$tableCols[$this->tableName];
-        } elseif (in_array($colName = self::unCamelize($name), $this->cols)) {
-            return new Column($colName, $this);
-        }
-    }
-
-    /**
-     * 驼峰命名转下划线命名
-     * 思路:
-     * 小写和大写紧挨一起的地方,加上分隔符,然后全部转小写
-     *
-     * @param        $camelCaps
-     * @param string $separator
-     *
-     * @return string
-     */
-    private static function unCamelize($camelCaps, $separator = '_')
-    {
-        return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+        return new Column($colName, $this);
     }
 
     function __toString()

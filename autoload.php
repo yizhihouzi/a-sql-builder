@@ -3,8 +3,8 @@
     $autoloadFunction = function ($class) {
         if (strpos($class, 'DBOperate\\') === 0) {
             $classPrefixPath = dirname(__FILE__);
-            $class           = substr($class, strpos($class, '\\')+1);
-            $classPath = $classPrefixPath . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR,
+            $class           = substr($class, strpos($class, '\\') + 1);
+            $classPath       = $classPrefixPath . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR,
                     $class) . '.php';
             if (file_exists($classPath)) {
                 require $classPath;

@@ -8,6 +8,8 @@
 
 namespace DBOperate;
 
+use DBOperate\Exception\DBOperateException;
+
 abstract class Operate implements Element
 {
     protected $table;
@@ -22,11 +24,31 @@ abstract class Operate implements Element
         $this->table = $table;
     }
 
-    function __toString()
+    /**
+     * @return string
+     * @throws DBOperateException
+     */
+    public function __toString()
     {
         return json_encode([$this->prepareStr(), $this->prepareValues()]);
     }
 
+    /**
+     * @return string
+     * @throws DBOperateException
+     */
+    public abstract function prepareStr();
+
+    /**
+     * @return array
+     * @throws DBOperateException
+     */
+    public abstract function prepareValues();
+
+    /**
+     * @return string
+     * @throws DBOperateException
+     */
     public function toTestSql()
     {
         $preStr    = $this->prepareStr();
@@ -34,8 +56,4 @@ abstract class Operate implements Element
         $preStr    = str_replace('?', '\'%s\'', $preStr);
         return vsprintf($preStr, $preValues);
     }
-
-    public abstract function prepareStr();
-
-    public abstract function prepareValues();
 }

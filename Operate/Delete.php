@@ -25,63 +25,6 @@ class Delete extends Operate
         return $this;
     }
 
-    private static function createConditionArrStr(array $conditionArr)
-    {
-        if (empty($conditionArr)) {
-            return '1';
-        }
-        $conditionGroup = [];
-        foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
-            } else {
-                throw new \Exception("$condition can not transform to Condition type");
-            }
-        }
-        foreach ($conditionGroup as $key => $item) {
-            $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
-        }
-        return implode(' OR ', $conditionGroup);
-    }
-
-    private static function createConditionValueArr(...$conditionArr)
-    {
-        $values       = [];
-        $conditionArr = ArrayHelper::flatten($conditionArr);
-        foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                if (($v = $condition->getValue()) !== false) {
-                    $values[] = $v;
-                }
-            } else {
-                throw new \Exception("$condition can not transform to Condition type");
-            }
-        }
-        return ArrayHelper::flatten($values);
-    }
-
-    private function createWhereConditionStr()
-    {
-        if (!empty($this->whereConditions)) {
-            return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
-        }
-        return '';
-    }
-
-    private function createWhereJoinConditionValueArr()
-    {
-        return self::createConditionValueArr($this->whereConditions);
-    }
-
-    public function createOrderByStr()
-    {
-        if (empty($this->orderByInfo)) {
-            return '';
-        } else {
-            return 'ORDER BY ' . implode(',', $this->orderByInfo);
-        }
-    }
-
     public function orderBy(Column $col, bool $asc = true)
     {
         $this->orderByInfo[] = "`{$col->colName()}`" . ($asc ? ' ASC' : ' DESC');
@@ -93,6 +36,9 @@ class Delete extends Operate
         $this->limitEnd   = $end;
     }
 
+    /**
+     * @return string
+     */
     public function prepareStr()
     {
         $tablesStr  = $this->table;
@@ -105,9 +51,81 @@ class Delete extends Operate
         return $preStr;
     }
 
+    /**
+     * @return string
+     */
+    private function createWhereConditionStr()
+    {
+        if (!empty($this->whereConditions)) {
+            return 'WHERE ' . self::createConditionArrStr($this->whereConditions);
+        }
+        return '';
+    }
+
+    /**
+     * @param array $conditionArr
+     *
+     * @return string
+     */
+    private static function createConditionArrStr(array $conditionArr)
+    {
+        if (empty($conditionArr)) {
+            return '1';
+        }
+        $conditionGroup = [];
+        foreach ($conditionArr as $condition) {
+            if ($condition instanceof Condition) {
+                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
+            }
+        }
+        foreach ($conditionGroup as $key => $item) {
+            $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
+        }
+        return implode(' OR ', $conditionGroup);
+    }
+
+    public function createOrderByStr()
+    {
+        if (empty($this->orderByInfo)) {
+            return '';
+        } else {
+            return 'ORDER BY ' . implode(',', $this->orderByInfo);
+        }
+    }
+
+    /**
+     * @return array
+     */
     public function prepareValues()
     {
         $whereConditionValues = $this->createWhereJoinConditionValueArr();
         return $whereConditionValues;
+    }
+
+    /**
+     * @return array
+     */
+    private function createWhereJoinConditionValueArr()
+    {
+        return self::createConditionValueArr($this->whereConditions);
+    }
+
+    /**
+     * @param array ...$conditionArr
+     *
+     * @return array
+     */
+    private static function createConditionValueArr(...$conditionArr)
+    {
+        $values       = [];
+        $conditionArr = ArrayHelper::flatten($conditionArr);
+        foreach ($conditionArr as $condition) {
+            if ($condition instanceof Condition) {
+                if (($v = $condition->getValue()) !== false) {
+                    $values[] = $v;
+                }
+            }
+        }
+        return ArrayHelper::flatten($values);
     }
 }

@@ -9,6 +9,7 @@
 namespace DBOperate;
 
 
+use DBOperate\Exception\DBOperateException;
 use DBOperate\Operate\Select;
 
 class Condition
@@ -18,7 +19,7 @@ class Condition
      */
     private $groupName;
     /**
-     * @var string 关系 > < <> =
+     * @var string 关系 > < <> = in
      */
     private $relation;
     /**
@@ -30,10 +31,20 @@ class Condition
      */
     private $value;
 
+    /**
+     * Condition constructor.
+     *
+     * @param Column $column
+     * @param        $value
+     * @param string $relation
+     * @param string $groupName
+     *
+     * @throws DBOperateException
+     */
     public function __construct(Column $column, $value, $relation = '=', $groupName = 'e')
     {
         if ($relation == 'in' && !is_array($value)) {
-            throw new \Exception('$value must be array type while $isScalarValue==true and $relation=="in"');
+            DBOperateException::invalidConditionValue();
         }
         $this->groupName = $groupName;
         $this->relation  = $relation;
@@ -41,6 +52,9 @@ class Condition
         $this->value     = $value;
     }
 
+    /**
+     * @return array|bool|float|int|mixed|string
+     */
     public function getValue()
     {
         if (is_scalar($this->value)) {
@@ -63,6 +77,9 @@ class Condition
         return $this->groupName;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         $relation = $this->relation;
@@ -79,14 +96,14 @@ class Condition
             } elseif (is_null($this->value)) {
                 $v = '';
                 if ($this->relation == '=') {
-                    $relation = ' is null';
+                    $relation = 'is null';
                 } else {
-                    $relation = ' is not null';
+                    $relation = 'is not null';
                 }
             } else {
                 $v = $this->value;
             }
         }
-        return sprintf("%s%s%s", (string)$this->column, $relation, $v);
+        return sprintf("%s %s %s", (string)$this->column, $relation, $v);
     }
 }

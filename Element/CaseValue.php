@@ -43,6 +43,11 @@ class CaseValue implements Element
         $this->elseValue = $elseValue;
     }
 
+    function __toString()
+    {
+        return json_encode([$this->prepareStr(), $this->prepareValues()]);
+    }
+
     public function prepareStr()
     {
         $preStr    = "CASE {$this->column}";
@@ -78,10 +83,5 @@ class CaseValue implements Element
             $values[] = $this->elseValue;
         }
         return $values;
-    }
-
-    function __toString()
-    {
-        return json_encode([$this->prepareStr(), $this->prepareValues()]);
     }
 }

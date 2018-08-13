@@ -8,228 +8,173 @@
 
 namespace DBOperate;
 
-use PDO;
-use PDOStatement;
+use DBOperate\Exception\DBOperateException;
+use DBOperate\Operate\Delete;
+use DBOperate\Operate\Insert;
+use DBOperate\Operate\Select;
+use DBOperate\Operate\Update;
+use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\ConnectionException;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Driver\ResultStatement;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\FetchMode;
 
-/**
- * Class ModelBase
- * @package Lib
- */
-class Connection implements ConnectionInterface
+class Connection
 {
-    public static function insert(Operate $insert)
-    {
-        return self::modifyData($insert);
-    }
-
-    public static function update(Operate $update)
-    {
-        return self::modifyData($update);
-    }
-
-    public static function select(Operate $select, bool $singleRow = false)
-    {
-        $stmt = self::execute($select->prepareStr(), $select->prepareValues());
-        if (self::isPdoStatement($stmt)) {
-            if (!$singleRow) {
-                $result = $stmt->fetchAll();
-            } else {
-                $result = $stmt->fetch();
-            }
-            $stmt->closeCursor();
-            return $result;
-        } else {
-            return false;
-        }
-    }
-
-    public static function delete(Operate $delete)
-    {
-        return self::modifyData($delete);
-    }
-
-    private static function modifyData(Operate $operate)
-    {
-        $stmt = self::execute($operate->prepareStr(), $operate->prepareValues());
-        if (self::isPdoStatement($stmt)) {
-            $affectNum = $stmt->rowCount();
-            $stmt->closeCursor();
-            return (int)$affectNum;
-        } else {
-            return false;
-        }
-    }
+    /**
+     * @var \Doctrine\DBAL\Connection
+     */
+    private $conn;
 
     /**
-     * @param string     $preStr
-     * @param array|null $inputParams
-     * @param int        $curExeTime
-     * @param int        $maxReExeTimes
+     * Connection constructor.
      *
-     * @return bool|PDOStatement
+     * @param string             $mysqlUri
+     *
+     * @param Configuration|null $config
+     *
+     * @throws DBOperateException
      */
-    protected static function execute(
-        string $preStr,
-        array $inputParams,
-        $curExeTime = 0,
-        $maxReExeTimes = 2
-    ) {
-        $pdo = self::getPdo();
-        if (!self::isPDOInstance($pdo)) {
-            return false;
-        }
+    public function __construct(string $mysqlUri, ?Configuration $config = null)
+    {
+        $connectionParams = ['url' => $mysqlUri];
         try {
-            $stmt     = @$pdo->prepare($preStr);
-            $exeState = $stmt->execute($inputParams);
-            if ($exeState === true) {
-                return $stmt;
-            } else {
-                $err['sql']   = $stmt->queryString;
-                $err['input'] = $inputParams;
-            }
-        } catch (\PDOException $e) {
-            if ($e->errorInfo[1] == 2006 || $e->errorInfo[1] == 2013 && ++$curExeTime < $maxReExeTimes) {
-                $pdo = self::getPdo(true);
-                if (self::isPDOInstance($pdo)) {
-                    return self::execute($preStr, $inputParams, $curExeTime);
-                }
-            }
-            $err['statement'] = $preStr;
-            $err['input']     = $inputParams;
-            $err['exception'] = $e->errorInfo;
+            $this->conn = DriverManager::getConnection($connectionParams, $config);
+        } catch (DBALException $e) {
+            throw new DBOperateException($e->getMessage());
         }
-        if (!empty(self::$logger) && is_callable([self::$logger, 'debug'])) {
-            self::$logger->debug(json_encode($err));
-        }
-        return false;
     }
-
-    private static $transactionId;
 
     /**
-     * 开启一个事务，成功返回事务ID；失败返回false
-     * 只有凭相应的事务ID才可以关闭这个事务，解决事务嵌套问题
-     * @return bool|int
+     * @param Insert $insert
+     *
+     * @return int
+     * @throws Exception\DBOperateException
      */
-    public static function beginTransaction()
+    public function insert(Insert $insert)
     {
-        $pdo = self::getPdo();
-        if (self::isPDOInstance($pdo) && !$pdo->inTransaction()) {
-            try {
-                $beginStatus = $pdo->beginTransaction();
-                if ($beginStatus) {
-                    return self::$transactionId = uniqid();
-                }
-            } catch (\PDOException $e) {
-                return false;
-            }
-        }
-        return false;
+        return $this->modifyData($insert);
     }
 
-    public static function commitTransaction($transactionId)
-    {
-        $pdo = self::getPdo();
-        if (($transactionId !== false) && ($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
-            return $pdo->commit();
-        }
-        return false;
-    }
-
-    public static function rollBackTransaction($transactionId)
-    {
-        $pdo = self::getPdo();
-        if (($transactionId !== false) && ($transactionId == self::$transactionId) && self::isPDOInstance($pdo) && $pdo->inTransaction()) {
-            return $pdo->rollBack();
-        }
-        return false;
-    }
-
-    public static function getLastInsertId()
-    {
-        $pdo = self::getPdo();
-        if (self::isPDOInstance($pdo)) {
-            $lastInsertId = $pdo->lastInsertId();
-            return is_numeric($lastInsertId) ? ((int)$lastInsertId) : $lastInsertId;
-        }
-        return false;
-    }
-
-    public static function closeTransactionWhenRequestClose()
-    {
-        self::rollBackTransaction(self::$transactionId);
-    }
-
-    private static $pdo;
-
-    public static function getPdo($refreshConn = false)
-    {
-        $pdo = &self::$pdo;
-        if (!$refreshConn && self::isPDOInstance($pdo)) {
-            return $pdo;
-        }
-        $pdo = null;
-        if (empty(self::$config)) {
-            throw new \UnexpectedValueException("self::\$config is null.");
-        }
-        $config     = self::$config;
-        $dsn        = <<<TAG
-{$config['driver']}:host={$config['host']};port={$config['port']};dbname={$config['db']};charset={$config['charset']}
-TAG;
-        $charset    = $config['charset'];
-        $pdoOptions = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_NAMED,
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset",
-            PDO::MYSQL_ATTR_FOUND_ROWS   => true,
-            PDO::ATTR_EMULATE_PREPARES   => false
-        ];
-        try {
-            $instance = new PDO($dsn, $config['user'], $config['pwd'], $pdoOptions);
-            return $pdo = $instance;
-        } catch (\PDOException $e) {
-            if (!empty(self::$logger) && is_callable([self::$logger, 'emergency'])) {
-                self::$logger->emergency(json_encode($e->getMessage()));
-            }
-            return false;
-        }
-    }
-
-    public static function setPdo(PDO $pdo)
-    {
-        self::$pdo = $pdo;
-    }
-
-    protected static function isPdoStatement($stmt)
-    {
-        return $stmt instanceof PDOStatement;
-    }
-
-    protected static function isPDOInstance($pdo)
-    {
-        return $pdo instanceof PDO;
-    }
-
-    private static $logger = null;
-
-    public static function setLogger($logger)
-    {
-        self::$logger = $logger;
-    }
-
-
-    private static $config;
 
     /**
-     * @param mixed $config
+     * @param Update $update
+     *
+     * @return int
+     * @throws Exception\DBOperateException
      */
-    public static function setConfig($config)
+    public function update(Update $update)
     {
-        self::$config = $config;
+        return $this->modifyData($update);
     }
 
-    public static function getSchemaName()
+    /**
+     * @param Delete $delete
+     *
+     * @return int
+     * @throws Exception\DBOperateException
+     */
+    public function delete(Delete $delete)
     {
-        return self::$config['db'];
+        return $this->modifyData($delete);
+    }
+
+    /**
+     * @param Operate $operate
+     *
+     * @return  int
+     * @throws Exception\DBOperateException
+     */
+    private function modifyData(Operate $operate)
+    {
+        try {
+            return $this->conn->executeUpdate($operate->prepareStr(), $operate->prepareValues());
+        } catch (DBALException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+    }
+
+    /**
+     * @param Select $select
+     * @param bool   $singleRow
+     *
+     * @return array|bool
+     * @throws DBOperateException
+     */
+    public function select(Select $select, bool $singleRow = false)
+    {
+        /** @var ResultStatement $stmt */
+        try {
+            $stmt = $this->conn->executeQuery($select->prepareStr(), $select->prepareValues());
+        } catch (DBALException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+        if (!$singleRow) {
+            $result = $stmt->fetchAll();
+        } else {
+            $result = $stmt->fetch(FetchMode::ASSOCIATIVE);
+        }
+        return $result;
+    }
+
+    public function beginTransaction()
+    {
+        $this->conn->beginTransaction();
+    }
+
+
+    /**
+     * @throws DBOperateException
+     */
+    public function rollback()
+    {
+        try {
+            $this->conn->rollBack();
+        } catch (ConnectionException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+    }
+
+    /**
+     * @throws DBOperateException
+     */
+    public function commit()
+    {
+        try {
+            $this->conn->commit();
+        } catch (ConnectionException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+    }
+
+    public function isTransactionActive()
+    {
+        return $this->conn->isTransactionActive();
+    }
+
+    /**
+     * @throws DBOperateException
+     */
+    public function isRollbackOnly()
+    {
+        try {
+            return $this->conn->isRollbackOnly();
+        } catch (ConnectionException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+    }
+
+    public function setAutoCommit(bool $autoCommit)
+    {
+        $this->conn->setAutoCommit($autoCommit);
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastInsertId()
+    {
+        return $this->conn->lastInsertId();
     }
 }

@@ -40,20 +40,6 @@ class Select extends Operate
         $this->forUpdate = $forUpdate;
     }
 
-    public function createSelectColStr()
-    {
-        if (!empty($this->fetchColumns)) {
-            $colsStrArr = [];
-            foreach ($this->fetchColumns as $column) {
-                /** @var Column $column */
-                $colsStrArr[] = $column->toSelectColStr();
-            }
-            return implode(',', $colsStrArr);
-        } else {
-            return '*';
-        }
-    }
-
     public function where(Condition ...$conditions)
     {
         $this->whereConditions = array_merge($this->whereConditions, $conditions);
@@ -85,92 +71,10 @@ class Select extends Operate
         return $this;
     }
 
-    private function innerJoinStr()
-    {
-        return self::createJoinStr($this->innerJoinInfo, '');
-    }
-
-    private function lJoinStr()
-    {
-        return self::createJoinStr($this->lJoinInfo, 'LEFT');
-    }
-
-    private function rJoinStr()
-    {
-        return self::createJoinStr($this->rJoinInfo, 'RIGHT');
-    }
-
-    private function innerJoinConditionValueArr()
-    {
-        $conditionArr = array_column($this->innerJoinInfo, 1);
-        return self::createConditionValueArr($conditionArr);
-    }
-
-    private function lJoinConditionValueArr()
-    {
-        $conditionArr = array_column($this->lJoinInfo, 1);
-        return self::createConditionValueArr($conditionArr);
-    }
-
-    private function rJoinConditionValueArr()
-    {
-        $conditionArr = array_column($this->rJoinInfo, 1);
-        return self::createConditionValueArr($conditionArr);
-    }
-
-    private function whereConditionStr()
-    {
-        if (!empty($this->whereConditions)) {
-            $conditionStr = self::createConditionArrStr($this->whereConditions);
-        }
-        if (!empty($this->matchInfo)) {
-            ['matchMode' => $matchMode, 'index' => $index] = $this->matchInfo;
-            $matchStr = "MATCH($index) AGAINST (? $matchMode)";
-        }
-        if (isset($conditionStr)) {
-            $whereStr = 'WHERE ' . $conditionStr;
-        }
-        if (isset($matchStr)) {
-            $whereStr = isset($whereStr) ? "$whereStr AND $matchStr" : "WHERE $matchStr";
-        }
-        return $whereStr ?? '';
-    }
-
-    private function whereConditionValueArr()
-    {
-        $whereConditionValueArr = self::createConditionValueArr($this->whereConditions);
-        if (!empty($this->matchInfo)) {
-            $whereConditionValueArr[] = $this->matchInfo['searchText'];
-        }
-        return $whereConditionValueArr;
-    }
-
-    public function groupByColStr()
-    {
-        if (empty($this->groupByColumns)) {
-            return '';
-        }
-        $colStrArr = [];
-        foreach ($this->groupByColumns as $column) {
-            $colStrArr[] = (string)$column;
-        }
-        $colStr = implode(',', $colStrArr);
-        return "GROUP BY ($colStr) ";
-    }
-
     public function groupBy(Column ...$cols)
     {
         $this->groupByColumns = array_merge($this->groupByColumns, $cols);
         return $this;
-    }
-
-    public function orderByStr()
-    {
-        if (empty($this->orderByInfo)) {
-            return '';
-        } else {
-            return 'ORDER BY ' . implode(',', $this->orderByInfo);
-        }
     }
 
     public function orderBy(Column $col, bool $asc = true)
@@ -184,6 +88,9 @@ class Select extends Operate
         $this->limitEnd   = $end;
     }
 
+    /**
+     * @return string
+     */
     public function prepareStr()
     {
         $tablesStr     = $this->table;
@@ -204,50 +111,34 @@ class Select extends Operate
         return $preStr;
     }
 
-    public function prepareValues()
+    public function createSelectColStr()
     {
-        $innerConditionValues = $this->innerJoinConditionValueArr();
-        $lConditionValues     = $this->lJoinConditionValueArr();
-        $rConditionValues     = $this->rJoinConditionValueArr();
-        $whereConditionValues = $this->whereConditionValueArr();
-        return array_merge($innerConditionValues, $lConditionValues, $rConditionValues, $whereConditionValues);
-    }
-
-    private static function createConditionArrStr(array $conditionArr)
-    {
-        if (empty($conditionArr)) {
-            return '1';
-        }
-        $conditionGroup = [];
-        foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
-            } else {
-                throw new \Exception("$condition can not transform to Condition type");
+        if (!empty($this->fetchColumns)) {
+            $colsStrArr = [];
+            foreach ($this->fetchColumns as $column) {
+                /** @var Column $column */
+                $colsStrArr[] = $column->toSelectColStr();
             }
+            return implode(',', $colsStrArr);
+        } else {
+            return '*';
         }
-        foreach ($conditionGroup as $key => $item) {
-            $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
-        }
-        return implode(' OR ', $conditionGroup);
     }
 
-    private static function createConditionValueArr(...$conditionArr)
+    /**
+     * @return string
+     */
+    private function innerJoinStr()
     {
-        $values       = [];
-        $conditionArr = ArrayHelper::flatten($conditionArr);
-        foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                if (($v = $condition->getValue()) !== false) {
-                    $values[] = $v;
-                }
-            } else {
-                throw new \Exception("$condition can not transform to Condition type");
-            }
-        }
-        return ArrayHelper::flatten($values);
+        return self::createJoinStr($this->innerJoinInfo, '');
     }
 
+    /**
+     * @param $joinInfo
+     * @param $joinDirection
+     *
+     * @return string
+     */
     private static function createJoinStr($joinInfo, $joinDirection)
     {
         $lJoinStrArr = [];
@@ -258,5 +149,156 @@ class Select extends Operate
             $lJoinStrArr[] = "$joinDirection JOIN $tableName ON $conditionStr";
         }
         return implode(' ', $lJoinStrArr);
+    }
+
+    /**
+     * @param array $conditionArr
+     *
+     * @return string
+     */
+    private static function createConditionArrStr(array $conditionArr)
+    {
+        if (empty($conditionArr)) {
+            return '1';
+        }
+        $conditionGroup = [];
+        foreach ($conditionArr as $condition) {
+            if ($condition instanceof Condition) {
+                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
+            }
+        }
+        foreach ($conditionGroup as $key => $item) {
+            $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
+        }
+        return implode(' OR ', $conditionGroup);
+    }
+
+    /**
+     * @return string
+     */
+    private function lJoinStr()
+    {
+        return self::createJoinStr($this->lJoinInfo, 'LEFT');
+    }
+
+    /**
+     * @return string
+     */
+    private function rJoinStr()
+    {
+        return self::createJoinStr($this->rJoinInfo, 'RIGHT');
+    }
+
+    /**
+     * @return string
+     */
+    private function whereConditionStr()
+    {
+        if (!empty($this->whereConditions)) {
+            $conditionStr = self::createConditionArrStr($this->whereConditions);
+        }
+        if (!empty($this->matchInfo)) {
+            ['matchMode' => $matchMode, 'index' => $index] = $this->matchInfo;
+            $matchStr = "MATCH($index) AGAINST (? $matchMode)";
+        }
+        if (isset($conditionStr)) {
+            $whereStr = 'WHERE ' . $conditionStr;
+        }
+        if (isset($matchStr)) {
+            $whereStr = isset($whereStr) ? "$whereStr AND $matchStr" : "WHERE $matchStr";
+        }
+        return $whereStr ?? '';
+    }
+
+    public function groupByColStr()
+    {
+        if (empty($this->groupByColumns)) {
+            return '';
+        }
+        $colStrArr = [];
+        foreach ($this->groupByColumns as $column) {
+            $colStrArr[] = (string)$column;
+        }
+        $colStr = implode(',', $colStrArr);
+        return "GROUP BY ($colStr) ";
+    }
+
+    public function orderByStr()
+    {
+        if (empty($this->orderByInfo)) {
+            return '';
+        } else {
+            return 'ORDER BY ' . implode(',', $this->orderByInfo);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function prepareValues()
+    {
+        $innerConditionValues = $this->innerJoinConditionValueArr();
+        $lConditionValues     = $this->lJoinConditionValueArr();
+        $rConditionValues     = $this->rJoinConditionValueArr();
+        $whereConditionValues = $this->whereConditionValueArr();
+        return array_merge($innerConditionValues, $lConditionValues, $rConditionValues, $whereConditionValues);
+    }
+
+    /**
+     * @return array
+     */
+    private function innerJoinConditionValueArr()
+    {
+        $conditionArr = array_column($this->innerJoinInfo, 1);
+        return self::createConditionValueArr($conditionArr);
+    }
+
+    /**
+     * @param array ...$conditionArr
+     *
+     * @return array
+     */
+    private static function createConditionValueArr(...$conditionArr)
+    {
+        $values       = [];
+        $conditionArr = ArrayHelper::flatten($conditionArr);
+        foreach ($conditionArr as $condition) {
+            if ($condition instanceof Condition) {
+                if (($v = $condition->getValue()) !== false) {
+                    $values[] = $v;
+                }
+            }
+        }
+        return ArrayHelper::flatten($values);
+    }
+
+    /**
+     * @return array
+     */
+    private function lJoinConditionValueArr()
+    {
+        $conditionArr = array_column($this->lJoinInfo, 1);
+        return self::createConditionValueArr($conditionArr);
+    }
+
+    /**
+     * @return array
+     */
+    private function rJoinConditionValueArr()
+    {
+        $conditionArr = array_column($this->rJoinInfo, 1);
+        return self::createConditionValueArr($conditionArr);
+    }
+
+    /**
+     * @return array
+     */
+    private function whereConditionValueArr()
+    {
+        $whereConditionValueArr = self::createConditionValueArr($this->whereConditions);
+        if (!empty($this->matchInfo)) {
+            $whereConditionValueArr[] = $this->matchInfo['searchText'];
+        }
+        return $whereConditionValueArr;
     }
 }
