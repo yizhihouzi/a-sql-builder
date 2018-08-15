@@ -34,6 +34,12 @@ class Select extends Operate
         return $this;
     }
 
+    public function clearFetchCols()
+    {
+        $this->fetchColumns = [];
+        return $this;
+    }
+
     public function forUpdate(bool $forUpdate)
     {
         $this->forUpdate = $forUpdate;
