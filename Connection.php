@@ -57,6 +57,20 @@ class Connection
         return $this->modifyData($insert);
     }
 
+    /**
+     * @param Operate $operate
+     *
+     * @return  int
+     * @throws Exception\DBOperateException
+     */
+    private function modifyData(Operate $operate)
+    {
+        try {
+            return $this->conn->executeUpdate($operate->prepareStr(), $operate->prepareValues());
+        } catch (DBALException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+    }
 
     /**
      * @param Update $update
@@ -78,21 +92,6 @@ class Connection
     public function delete(Delete $delete)
     {
         return $this->modifyData($delete);
-    }
-
-    /**
-     * @param Operate $operate
-     *
-     * @return  int
-     * @throws Exception\DBOperateException
-     */
-    private function modifyData(Operate $operate)
-    {
-        try {
-            return $this->conn->executeUpdate($operate->prepareStr(), $operate->prepareValues());
-        } catch (DBALException $e) {
-            throw new DBOperateException($e->getMessage());
-        }
     }
 
     /**

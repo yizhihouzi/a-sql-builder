@@ -4,3 +4,4 @@ test*.*
 log/
 .phpunit.result.cache
 Tests/test.sqlite
+Tables/

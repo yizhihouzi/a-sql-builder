@@ -28,10 +28,9 @@ class Select extends Operate
     private $forUpdate       = false;
     private $matchInfo       = null;
 
-    public function fetchCols(...$cols)
+    public function fetchCols(Column ...$cols)
     {
-        $this->fetchColumns = array_merge($this->fetchColumns, ArrayHelper::flatten($cols));
-        $this->fetchColumns = array_filter($this->fetchColumns);
+        $this->fetchColumns = array_merge($this->fetchColumns, $cols);
         return $this;
     }
 
@@ -250,23 +249,20 @@ class Select extends Operate
     private function innerJoinConditionValueArr()
     {
         $conditionArr = array_column($this->innerJoinInfo, 1);
-        return self::createConditionValueArr($conditionArr);
+        return self::createConditionValueArr(...$conditionArr);
     }
 
     /**
-     * @param array ...$conditionArr
+     * @param Condition[] ...$conditionArr
      *
      * @return array
      */
-    private static function createConditionValueArr(...$conditionArr)
+    private static function createConditionValueArr(Condition ...$conditionArr)
     {
-        $values       = [];
-        $conditionArr = ArrayHelper::flatten($conditionArr);
+        $values = [];
         foreach ($conditionArr as $condition) {
-            if ($condition instanceof Condition) {
-                if (($v = $condition->getValue()) !== false) {
-                    $values[] = $v;
-                }
+            if (($v = $condition->getValue()) !== false) {
+                $values[] = $v;
             }
         }
         return ArrayHelper::flatten($values);
@@ -278,7 +274,7 @@ class Select extends Operate
     private function lJoinConditionValueArr()
     {
         $conditionArr = array_column($this->lJoinInfo, 1);
-        return self::createConditionValueArr($conditionArr);
+        return self::createConditionValueArr(...$conditionArr);
     }
 
     /**
@@ -287,7 +283,7 @@ class Select extends Operate
     private function rJoinConditionValueArr()
     {
         $conditionArr = array_column($this->rJoinInfo, 1);
-        return self::createConditionValueArr($conditionArr);
+        return self::createConditionValueArr(...$conditionArr);
     }
 
     /**
@@ -295,7 +291,7 @@ class Select extends Operate
      */
     private function whereConditionValueArr()
     {
-        $whereConditionValueArr = self::createConditionValueArr($this->whereConditions);
+        $whereConditionValueArr = self::createConditionValueArr(...$this->whereConditions);
         if (!empty($this->matchInfo)) {
             $whereConditionValueArr[] = $this->matchInfo['searchText'];
         }
