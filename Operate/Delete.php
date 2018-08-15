@@ -74,7 +74,9 @@ class Delete extends Operate
         }
         $conditionGroup = [];
         foreach ($conditionArr as $condition) {
-            $conditionGroup[$condition->getGroupName()][] = (string)$condition;
+            if ($condition instanceof Condition) {
+                $conditionGroup[$condition->getGroupName()][] = (string)$condition;
+            }
         }
         foreach ($conditionGroup as $key => $item) {
             $conditionGroup[$key] = '(' . implode(' AND ', $item) . ')';
@@ -105,20 +107,23 @@ class Delete extends Operate
      */
     private function createWhereJoinConditionValueArr()
     {
-        return self::createConditionValueArr(...$this->whereConditions);
+        return self::createConditionValueArr($this->whereConditions);
     }
 
     /**
-     * @param Condition[] ...$conditionArr
+     * @param array ...$conditionArr
      *
      * @return array
      */
-    private static function createConditionValueArr(Condition...$conditionArr)
+    private static function createConditionValueArr(...$conditionArr)
     {
-        $values = [];
+        $values       = [];
+        $conditionArr = ArrayHelper::flatten($conditionArr);
         foreach ($conditionArr as $condition) {
-            if (($v = $condition->getValue()) !== false) {
-                $values[] = $v;
+            if ($condition instanceof Condition) {
+                if (($v = $condition->getValue()) !== false) {
+                    $values[] = $v;
+                }
             }
         }
         return ArrayHelper::flatten($values);

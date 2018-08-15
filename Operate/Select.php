@@ -255,20 +255,23 @@ class Select extends Operate
     private function innerJoinConditionValueArr()
     {
         $conditionArr = array_column($this->innerJoinInfo, 1);
-        return self::createConditionValueArr(...$conditionArr);
+        return self::createConditionValueArr($conditionArr);
     }
 
     /**
-     * @param Condition[] ...$conditionArr
+     * @param array ...$conditionArr
      *
      * @return array
      */
-    private static function createConditionValueArr(Condition ...$conditionArr)
+    private static function createConditionValueArr(...$conditionArr)
     {
-        $values = [];
+        $values       = [];
+        $conditionArr = ArrayHelper::flatten($conditionArr);
         foreach ($conditionArr as $condition) {
-            if (($v = $condition->getValue()) !== false) {
-                $values[] = $v;
+            if ($condition instanceof Condition) {
+                if (($v = $condition->getValue()) !== false) {
+                    $values[] = $v;
+                }
             }
         }
         return ArrayHelper::flatten($values);
@@ -280,7 +283,7 @@ class Select extends Operate
     private function lJoinConditionValueArr()
     {
         $conditionArr = array_column($this->lJoinInfo, 1);
-        return self::createConditionValueArr(...$conditionArr);
+        return self::createConditionValueArr($conditionArr);
     }
 
     /**
@@ -289,7 +292,7 @@ class Select extends Operate
     private function rJoinConditionValueArr()
     {
         $conditionArr = array_column($this->rJoinInfo, 1);
-        return self::createConditionValueArr(...$conditionArr);
+        return self::createConditionValueArr($conditionArr);
     }
 
     /**
@@ -297,7 +300,7 @@ class Select extends Operate
      */
     private function whereConditionValueArr()
     {
-        $whereConditionValueArr = self::createConditionValueArr(...$this->whereConditions);
+        $whereConditionValueArr = self::createConditionValueArr($this->whereConditions);
         if (!empty($this->matchInfo)) {
             $whereConditionValueArr[] = $this->matchInfo['searchText'];
         }
