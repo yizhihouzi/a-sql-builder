@@ -47,6 +47,8 @@ class Connection
     }
 
     /**
+     * 增加操作
+     *
      * @param Insert $insert
      *
      * @return int
@@ -58,6 +60,8 @@ class Connection
     }
 
     /**
+     * 更新操作
+     *
      * @param Update $update
      *
      * @return int
@@ -69,6 +73,8 @@ class Connection
     }
 
     /**
+     * 删除操作
+     *
      * @param Delete $delete
      *
      * @return int
@@ -80,6 +86,8 @@ class Connection
     }
 
     /**
+     * 数据增、删、改
+     *
      * @param Operate $operate
      *
      * @return  int
@@ -87,9 +95,6 @@ class Connection
      */
     private function modifyData(Operate $operate)
     {
-        if (!$this->_conn->ping()) {
-            $this->_conn->close();
-        }
         try {
             return $this->_conn->executeUpdate($operate->prepareStr(), $operate->prepareValues());
         } catch (DBALException $e) {
@@ -98,6 +103,8 @@ class Connection
     }
 
     /**
+     * 数据查询
+     *
      * @param Select $select
      * @param bool   $singleRow
      *
@@ -106,9 +113,6 @@ class Connection
      */
     public function select(Select $select, bool $singleRow = false)
     {
-        if (!$this->_conn->ping()) {
-            $this->_conn->close();
-        }
         try {
             /** @var ResultStatement $stmt */
             $stmt = $this->_conn->executeQuery($select->prepareStr(), $select->prepareValues());
@@ -123,6 +127,9 @@ class Connection
         return $result;
     }
 
+    /**
+     * 开启事务
+     */
     public function beginTransaction()
     {
         $this->_conn->beginTransaction();
@@ -130,6 +137,7 @@ class Connection
 
 
     /**
+     * 回滚事务
      * @throws DBOperateException
      */
     public function rollback()
@@ -142,6 +150,7 @@ class Connection
     }
 
     /**
+     * 提交事务
      * @throws DBOperateException
      */
     public function commit()
@@ -153,12 +162,17 @@ class Connection
         }
     }
 
+    /**
+     * 当前连接是否存在事务
+     * @return bool
+     */
     public function isTransactionActive()
     {
         return $this->_conn->isTransactionActive();
     }
 
     /**
+     * 是否必须回滚
      * @throws DBOperateException
      */
     public function isRollbackOnly()
@@ -170,9 +184,30 @@ class Connection
         }
     }
 
+    /**
+     * 设置是否自动提交
+     *
+     * @param bool $autoCommit
+     */
     public function setAutoCommit(bool $autoCommit)
     {
         $this->_conn->setAutoCommit($autoCommit);
+    }
+
+    /**
+     * 打开数据库连接
+     */
+    public function connect()
+    {
+        $this->_conn->connect();
+    }
+
+    /**
+     * 关闭数据库连接
+     */
+    public function close()
+    {
+        $this->_conn->close();
     }
 
     /**
