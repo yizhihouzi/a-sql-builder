@@ -25,7 +25,7 @@ class Connection
     /**
      * @var \Doctrine\DBAL\Connection
      */
-    private $conn;
+    private $_conn;
 
     /**
      * Connection constructor.
@@ -40,7 +40,7 @@ class Connection
     {
         $connectionParams = ['url' => $mysqlUri];
         try {
-            $this->conn = DriverManager::getConnection($connectionParams, $config);
+            $this->_conn = DriverManager::getConnection($connectionParams, $config);
         } catch (DBALException $e) {
             throw new DBOperateException($e->getMessage());
         }
@@ -55,21 +55,6 @@ class Connection
     public function insert(Insert $insert)
     {
         return $this->modifyData($insert);
-    }
-
-    /**
-     * @param Operate $operate
-     *
-     * @return  int
-     * @throws Exception\DBOperateException
-     */
-    private function modifyData(Operate $operate)
-    {
-        try {
-            return $this->conn->executeUpdate($operate->prepareStr(), $operate->prepareValues());
-        } catch (DBALException $e) {
-            throw new DBOperateException($e->getMessage());
-        }
     }
 
     /**
@@ -95,6 +80,24 @@ class Connection
     }
 
     /**
+     * @param Operate $operate
+     *
+     * @return  int
+     * @throws Exception\DBOperateException
+     */
+    private function modifyData(Operate $operate)
+    {
+        if (!$this->_conn->ping()) {
+            $this->_conn->close();
+        }
+        try {
+            return $this->_conn->executeUpdate($operate->prepareStr(), $operate->prepareValues());
+        } catch (DBALException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+    }
+
+    /**
      * @param Select $select
      * @param bool   $singleRow
      *
@@ -103,9 +106,12 @@ class Connection
      */
     public function select(Select $select, bool $singleRow = false)
     {
-        /** @var ResultStatement $stmt */
+        if (!$this->_conn->ping()) {
+            $this->_conn->close();
+        }
         try {
-            $stmt = $this->conn->executeQuery($select->prepareStr(), $select->prepareValues());
+            /** @var ResultStatement $stmt */
+            $stmt = $this->_conn->executeQuery($select->prepareStr(), $select->prepareValues());
         } catch (DBALException $e) {
             throw new DBOperateException($e->getMessage());
         }
@@ -119,7 +125,7 @@ class Connection
 
     public function beginTransaction()
     {
-        $this->conn->beginTransaction();
+        $this->_conn->beginTransaction();
     }
 
 
@@ -129,7 +135,7 @@ class Connection
     public function rollback()
     {
         try {
-            $this->conn->rollBack();
+            $this->_conn->rollBack();
         } catch (ConnectionException $e) {
             throw new DBOperateException($e->getMessage());
         }
@@ -141,7 +147,7 @@ class Connection
     public function commit()
     {
         try {
-            $this->conn->commit();
+            $this->_conn->commit();
         } catch (ConnectionException $e) {
             throw new DBOperateException($e->getMessage());
         }
@@ -149,7 +155,7 @@ class Connection
 
     public function isTransactionActive()
     {
-        return $this->conn->isTransactionActive();
+        return $this->_conn->isTransactionActive();
     }
 
     /**
@@ -158,7 +164,7 @@ class Connection
     public function isRollbackOnly()
     {
         try {
-            return $this->conn->isRollbackOnly();
+            return $this->_conn->isRollbackOnly();
         } catch (ConnectionException $e) {
             throw new DBOperateException($e->getMessage());
         }
@@ -166,7 +172,7 @@ class Connection
 
     public function setAutoCommit(bool $autoCommit)
     {
-        $this->conn->setAutoCommit($autoCommit);
+        $this->_conn->setAutoCommit($autoCommit);
     }
 
     /**
@@ -174,6 +180,6 @@ class Connection
      */
     public function getLastInsertId()
     {
-        return $this->conn->lastInsertId();
+        return $this->_conn->lastInsertId();
     }
 }
