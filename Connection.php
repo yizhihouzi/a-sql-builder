@@ -106,12 +106,11 @@ class Connection
      * 数据查询
      *
      * @param Select $select
-     * @param bool   $singleRow
      *
-     * @return array|bool
+     * @return array
      * @throws DBOperateException
      */
-    public function select(Select $select, bool $singleRow = false)
+    public function select(Select $select)
     {
         try {
             /** @var ResultStatement $stmt */
@@ -119,12 +118,28 @@ class Connection
         } catch (DBALException $e) {
             throw new DBOperateException($e->getMessage());
         }
-        if (!$singleRow) {
-            $result = $stmt->fetchAll();
-        } else {
-            $result = $stmt->fetch(FetchMode::ASSOCIATIVE);
-        }
+        $result = $stmt->fetchAll();
         return $result;
+    }
+
+    /**
+     * 数据查询
+     *
+     * @param Select $select
+     *
+     * @return array|null
+     * @throws DBOperateException
+     */
+    public function selectSingle(Select $select)
+    {
+        try {
+            /** @var ResultStatement $stmt */
+            $stmt = $this->_conn->executeQuery($select->prepareStr(), $select->prepareValues());
+        } catch (DBALException $e) {
+            throw new DBOperateException($e->getMessage());
+        }
+        $result = $stmt->fetch(FetchMode::ASSOCIATIVE);
+        return is_array($result) ? $result : null;
     }
 
     /**
