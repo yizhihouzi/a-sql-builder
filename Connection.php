@@ -30,15 +30,13 @@ class Connection
     /**
      * Connection constructor.
      *
-     * @param string             $mysqlUri
-     *
+     * @param array              $connectionParams
      * @param Configuration|null $config
      *
      * @throws DBOperateException
      */
-    public function __construct(string $mysqlUri, ?Configuration $config = null)
+    public function __construct(array $connectionParams, ?Configuration $config = null)
     {
-        $connectionParams = ['url' => $mysqlUri];
         try {
             $this->_conn = DriverManager::getConnection($connectionParams, $config);
         } catch (DBALException $e) {
