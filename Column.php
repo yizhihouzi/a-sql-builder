@@ -15,32 +15,30 @@ namespace DBOperate;
  */
 class Column
 {
-    private $table;
+    private $collection;
     private $col;
     private $alias;
 
     /**
      * Column constructor.
      *
-     * @param string       $col
-     * @param Table|string $table
-     * @param string       $alias
+     * @param string     $col
+     * @param Collection $collection
+     * @param string     $alias
      */
-    public function __construct(string $col, Table $table = null, string $alias = null)
+    public function __construct(string $col, Collection $collection = null, string $alias = null)
     {
-        $this->table = $table;
-        $this->col   = $col;
-        $this->alias = $alias;
+        $this->collection = $collection;
+        $this->col        = $col;
+        $this->alias      = $alias;
     }
 
     public function toSelectColStr()
     {
-        $col = null;
-        if (($this->table) instanceof Table) {
-            $tableName = $this->table->name();
-            $col       = "$tableName.`$this->col`";
-        } else {
-            $col = $this->col;
+        $col = "`$this->col`";
+        if (($this->collection) instanceof Collection) {
+            $collectionName = $this->collection->getReferenceName();
+            $col            = "`$collectionName`.$col";
         }
         if (is_string($this->alias)) {
             $col = "$col `$this->alias`";
@@ -69,20 +67,8 @@ class Column
         return $this->alias;
     }
 
-    public function tableName()
-    {
-        return $this->table;
-    }
-
     public function __toString()
     {
-        $col = null;
-        if (($this->table) instanceof Table) {
-            $tableName = $this->table->name();
-            $col       = "$tableName.`$this->col`";
-        } else {
-            $col = $this->col;
-        }
-        return $col;
+        return $this->toSelectColStr();
     }
 }

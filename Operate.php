@@ -12,27 +12,6 @@ use DBOperate\Exception\DBOperateException;
 
 abstract class Operate implements Element
 {
-    protected $table;
-
-    /**
-     * DBOperateInterface constructor.
-     *
-     * @param Table $table
-     */
-    public function __construct(Table $table)
-    {
-        $this->table = $table;
-    }
-
-    /**
-     * @return string
-     * @throws DBOperateException
-     */
-    public function __toString()
-    {
-        return json_encode([$this->prepareStr(), $this->prepareValues()]);
-    }
-
     /**
      * @return string
      * @throws DBOperateException
@@ -44,6 +23,15 @@ abstract class Operate implements Element
      * @throws DBOperateException
      */
     public abstract function prepareValues();
+
+    /**
+     * @return string
+     * @throws DBOperateException
+     */
+    public function __toString()
+    {
+        return json_encode([$this->prepareStr(), $this->prepareValues()]);
+    }
 
     /**
      * @return string

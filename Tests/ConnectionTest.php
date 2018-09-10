@@ -27,7 +27,7 @@ class ConnectionTest extends TestCase
      */
     public function testTransactionNest()
     {
-        $conn = new Connection(DB_URI);
+        $conn = new Connection(CONN_PARAMS);
         self::assertFalse($conn->isTransactionActive());
         $conn->beginTransaction();
         $conn->beginTransaction();
@@ -44,7 +44,7 @@ class ConnectionTest extends TestCase
      */
     public function testInsert()
     {
-        $conn   = new Connection(DB_URI);
+        $conn   = new Connection(CONN_PARAMS);
         $insert = new Insert(new Table('t'));
         $insert->setInsertValues(['content'], [1], [2], [3]);
         $affNum = $conn->insert($insert);
@@ -66,7 +66,7 @@ class ConnectionTest extends TestCase
         $select->where(new Condition(new Column('id'), 1, '>'));
         $select->orderBy(new Column('id'), false);
         $select->fetchCols(new Column('content'), new Column('id'));
-        $row = $conn->select($select, true);
+        $row = $conn->selectSingle($select);
         self::assertArrayHasKey('content', $row);
         self::assertArrayHasKey('id', $row);
         return $row['id'];
@@ -82,7 +82,7 @@ class ConnectionTest extends TestCase
      */
     public function testUpdate(int $id)
     {
-        $conn     = new Connection(DB_URI);
+        $conn     = new Connection(CONN_PARAMS);
         $update   = new Update(new Table('t'));
         $content2 = 'hhh';
         $update->setColumn(new Column('content'), $content2);
@@ -100,7 +100,7 @@ class ConnectionTest extends TestCase
      */
     public function testDelete(int $id)
     {
-        $conn   = new Connection(DB_URI);
+        $conn   = new Connection(CONN_PARAMS);
         $delete = new Delete(new Table('t'));
         $delete->where(new Condition(new Column('id'), $id));
         $affNum = $conn->delete($delete);

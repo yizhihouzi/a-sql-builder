@@ -12,9 +12,22 @@ use DBOperate\ArrayHelper;
 use DBOperate\Column;
 use DBOperate\Condition;
 use DBOperate\Operate;
+use DBOperate\Table;
 
 class Delete extends Operate
 {
+    protected $table;
+
+    /**
+     * DBOperateInterface constructor.
+     *
+     * @param Table $table
+     */
+    public function __construct(Table $table)
+    {
+        $this->table = $table;
+    }
+
     private $limitStart, $limitEnd;
     private              $orderByInfo     = [];
     private              $whereConditions = [];

@@ -6,4 +6,8 @@
  * Time: 14:20
  */
 require __DIR__ . "/../vendor/autoload.php";
-define('DB_URI', 'sqlite:///' . __DIR__ . '/test.sqlite');
+define('CONN_PARAMS',
+    [
+        'url'           => 'sqlite:///' . __DIR__ . '/test.sqlite',
+        'driverOptions' => [PDO::MYSQL_ATTR_FOUND_ROWS => true]
+    ]);

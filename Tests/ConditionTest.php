@@ -18,12 +18,12 @@ class ConditionTest extends TestCase
 
     public function testEqual()
     {
-        $c1 = new \DBOperate\Condition(
+        $c1 = new Condition(
             new Column('t1'),
             '4565',
             '='
         );
-        self::assertEquals('t1 = ?', (string)$c1);
+        self::assertEquals('`t1` = ?', (string)$c1);
     }
 
     public function testIn()
@@ -34,32 +34,32 @@ class ConditionTest extends TestCase
             self::assertTrue($e instanceof DBOperateException);
         }
         $c1 = new Condition(new Column('col1'), [1, 2, 3], 'in');
-        self::assertEquals('col1 in (?,?,?)', (string)$c1);
+        self::assertEquals('`col1` in (?,?,?)', (string)$c1);
         $c2 = new Condition(new Column('col1'), ['kk', 'fd', 'kk'], 'in');
-        self::assertEquals('col1 in (?,?,?)', (string)$c2);
+        self::assertEquals('`col1` in (?,?,?)', (string)$c2);
     }
 
     public function testNull()
     {
         $c1 = new Condition(new Column('col1'), null, '=');
-        self::assertEquals('col1 is null ', (string)$c1);
+        self::assertEquals('`col1` is null ', (string)$c1);
         $c2 = new Condition(new Column('col1'), null, '><');
-        self::assertEquals('col1 is not null ', (string)$c2);
+        self::assertEquals('`col1` is not null ', (string)$c2);
     }
 
     public function testGreater()
     {
         $c1 = new Condition(new Column('col1'), 3, '>');
-        self::assertEquals('col1 > ?', (string)$c1);
+        self::assertEquals('`col1` > ?', (string)$c1);
         $c1 = new Condition(new Column('col1'), new Column('col2'), '>');
-        self::assertEquals('col1 > col2', (string)$c1);
+        self::assertEquals('`col1` > `col2`', (string)$c1);
     }
 
     public function testLess()
     {
         $c1 = new Condition(new Column('col1'), 3, '<');
-        self::assertEquals('col1 < ?', (string)$c1);
+        self::assertEquals('`col1` < ?', (string)$c1);
         $c1 = new Condition(new Column('col1'), new Column('col2'), '<');
-        self::assertEquals('col1 < col2', (string)$c1);
+        self::assertEquals('`col1` < `col2`', (string)$c1);
     }
 }

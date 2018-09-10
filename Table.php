@@ -13,19 +13,19 @@ namespace DBOperate;
  * @property array cols
  * @package DBOperate
  */
-class Table
+class Table implements Collection
 {
     private $tableName;
-    private $tableAliasName;
+    private $aliasName;
 
     /**
      * Table constructor.
      *
-     * @param string $table
+     * @param string $tableName
      */
-    public function __construct(string $table)
+    public function __construct(string $tableName)
     {
-        $this->tableName = $table;
+        $this->tableName = $tableName;
     }
 
     /**
@@ -72,15 +72,28 @@ class Table
 
     public function withName(string $name)
     {
-        $new                 = clone $this;
-        $new->tableAliasName = trim($name, '`');
+        $new            = clone $this;
+        $new->aliasName = trim($name, '`');
         return $new;
     }
 
     public function name()
     {
-        $name = $this->tableAliasName ?? $this->tableName;
-        return "`$name`";
+        return $this->tableName;
+    }
+
+    public function getReferenceName(): string
+    {
+        return $this->aliasName ?? $this->tableName;
+    }
+
+    function __toString()
+    {
+        if (!empty($this->aliasName)) {
+            return "`$this->tableName` `$this->aliasName`";
+        } else {
+            return "`$this->tableName`";
+        }
     }
 
     public function __get($colName)
@@ -101,11 +114,5 @@ class Table
     private static function unCamelize($camelCaps, $separator = '_')
     {
         return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
-    }
-
-    function __toString()
-    {
-        $aliasName = (!empty($this->tableAliasName)) ? " `$this->tableAliasName`" : '';
-        return "`$this->tableName`$aliasName";
     }
 }

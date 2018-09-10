@@ -9,12 +9,24 @@
 namespace DBOperate\Operate;
 
 use DBOperate\Operate;
+use DBOperate\Table;
 
 class Insert extends Operate
 {
-    private $insertInfo           = [];
-    private $onDuplicateKeyUpdate = [];
-    private $replaceInstead       = false;
+    private   $insertInfo           = [];
+    private   $onDuplicateKeyUpdate = [];
+    private   $replaceInstead       = false;
+    protected $table;
+
+    /**
+     * DBOperateInterface constructor.
+     *
+     * @param Table $table
+     */
+    public function __construct(Table $table)
+    {
+        $this->table = $table;
+    }
 
     /**
      * @param array $cols         由Column列对象组成的数组

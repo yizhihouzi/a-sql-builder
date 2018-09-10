@@ -22,7 +22,18 @@ class Update extends Operate
     private $withTableArr     = [];
     private $limitStart, $limitEnd;
 
-    private $whereConditions = [];
+    private   $whereConditions = [];
+    protected $table;
+
+    /**
+     * DBOperateInterface constructor.
+     *
+     * @param Table $table
+     */
+    public function __construct(Table $table)
+    {
+        $this->table = $table;
+    }
 
     public function setColumn(Column $col, $value)
     {

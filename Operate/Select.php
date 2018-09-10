@@ -9,12 +9,12 @@
 namespace DBOperate\Operate;
 
 use DBOperate\ArrayHelper;
+use DBOperate\Collection;
 use DBOperate\Column;
 use DBOperate\Condition;
 use DBOperate\Operate;
-use DBOperate\Table;
 
-class Select extends Operate
+class Select extends Operate implements Collection
 {
     private $fetchColumns = [];
     private $limitStart, $limitEnd;
@@ -27,6 +27,24 @@ class Select extends Operate
     private $rJoinInfo       = [];
     private $forUpdate       = false;
     private $matchInfo       = null;
+    /**
+     * @var Collection
+     */
+    protected $collection;
+    private   $aliasIndex = 0;
+
+    /**
+     * Select constructor.
+     *
+     * @param Collection $collection
+     */
+    public function __construct(Collection $collection)
+    {
+        static $aliasCount = 0;
+        $aliasCount++;
+        $this->aliasIndex = $aliasCount;
+        $this->collection = $collection;
+    }
 
     public function fetchCols(Column ...$cols)
     {
@@ -58,21 +76,21 @@ class Select extends Operate
         $this->matchInfo = ['matchMode' => $matchMode, 'searchText' => $searchText, 'index' => $index];
     }
 
-    public function join(Table $table, Condition ...$conditions)
+    public function join(Collection $collection, Condition ...$conditions)
     {
-        $this->innerJoinInfo[] = [$table, $conditions];
+        $this->innerJoinInfo[] = [$collection, $conditions];
         return $this;
     }
 
-    public function lJoin(Table $table, Condition ...$conditions)
+    public function lJoin(Collection $collection, Condition ...$conditions)
     {
-        $this->lJoinInfo[] = [$table, $conditions];
+        $this->lJoinInfo[] = [$collection, $conditions];
         return $this;
     }
 
-    public function rJoin(Table $table, Condition ...$conditions)
+    public function rJoin(Collection $collection, Condition ...$conditions)
     {
-        $this->rJoinInfo[] = [$table, $conditions];
+        $this->rJoinInfo[] = [$collection, $conditions];
         return $this;
     }
 
@@ -98,7 +116,7 @@ class Select extends Operate
      */
     public function prepareStr()
     {
-        $tablesStr     = $this->table;
+        $collectionStr = $this->getCollectionStr($this->collection);
         $selectColStr  = $this->createSelectColStr();
         $joinStr       = $this->innerJoinStr();
         $lJoinStr      = $this->lJoinStr();
@@ -106,7 +124,9 @@ class Select extends Operate
         $whereStr      = $this->whereConditionStr();
         $groupByColStr = $this->groupByColStr();
         $orderByStr    = $this->orderByStr();
-        $preStr        = "SELECT $selectColStr FROM $tablesStr $joinStr $lJoinStr $rJoinStr $whereStr $groupByColStr $orderByStr";
+        $preStr        = <<<TAG
+SELECT $selectColStr FROM $collectionStr $joinStr $lJoinStr $rJoinStr $whereStr $groupByColStr $orderByStr
+TAG;
         if (is_int($this->limitStart) && is_int($this->limitEnd)) {
             $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
         }
@@ -114,6 +134,15 @@ class Select extends Operate
             $preStr = "$preStr FOR UPDATE";
         }
         return $preStr;
+    }
+
+    private function getCollectionStr(Collection $collection): string
+    {
+        if ($collection instanceof Select) {
+            return "({$collection->prepareStr()}) `{$collection->getReferenceName()}`";
+        } else {
+            return (string)$collection;
+        }
     }
 
     public function createSelectColStr()
@@ -146,14 +175,19 @@ class Select extends Operate
      */
     private static function createJoinStr($joinInfo, $joinDirection)
     {
-        $lJoinStrArr = [];
-        foreach ($joinInfo as $lJoinItem) {
-            $conditionArr  = $lJoinItem[1];
-            $conditionStr  = self::createConditionArrStr($conditionArr);
-            $tableName     = (string)$lJoinItem[0];
-            $lJoinStrArr[] = "$joinDirection JOIN $tableName ON $conditionStr";
+        $joinStrArr = [];
+        foreach ($joinInfo as $joinItem) {
+            $conditionArr = $joinItem[1];
+            $conditionStr = self::createConditionArrStr($conditionArr);
+            $collection   = $joinItem[0];
+            if ($collection instanceof Select) {
+                $collectionStr = $collection->getCollectionStr($collection);
+            } else {
+                $collectionStr = (string)$collection;
+            }
+            $joinStrArr[] = "$joinDirection JOIN $collectionStr ON $conditionStr";
         }
-        return implode(' ', $lJoinStrArr);
+        return implode(' ', $joinStrArr);
     }
 
     /**
@@ -242,11 +276,21 @@ class Select extends Operate
      */
     public function prepareValues()
     {
-        $innerConditionValues = $this->innerJoinConditionValueArr();
-        $lConditionValues     = $this->lJoinConditionValueArr();
-        $rConditionValues     = $this->rJoinConditionValueArr();
-        $whereConditionValues = $this->whereConditionValueArr();
-        return array_merge($innerConditionValues, $lConditionValues, $rConditionValues, $whereConditionValues);
+        if ($this->collection instanceof Select) {
+            $collectionValues = $this->collection->prepareValues();
+        } else {
+            $collectionValues = [];
+        }
+        $innerCollectionValues = $this->innerJoinCollectionValueArr();
+        $innerConditionValues  = $this->innerJoinConditionValueArr();
+        $lCollectionValues     = $this->lJoinCollectionValueArr();
+        $lConditionValues      = $this->lJoinConditionValueArr();
+        $rCollectionValues     = $this->rJoinCollectionValueArr();
+        $rConditionValues      = $this->rJoinConditionValueArr();
+        $whereConditionValues  = $this->whereConditionValueArr();
+        return array_merge($collectionValues, $innerCollectionValues, $innerConditionValues, $lCollectionValues,
+            $lConditionValues, $rCollectionValues, $rConditionValues,
+            $whereConditionValues);
     }
 
     /**
@@ -305,5 +349,46 @@ class Select extends Operate
             $whereConditionValueArr[] = $this->matchInfo['searchText'];
         }
         return $whereConditionValueArr;
+    }
+
+    public function getReferenceName(): string
+    {
+        return "s{$this->aliasIndex}";
+    }
+
+    private function innerJoinCollectionValueArr()
+    {
+        $valuesArr       = [];
+        $joinCollections = array_column($this->innerJoinInfo, 0);
+        foreach ($joinCollections as $collection) {
+            if ($collection instanceof Select) {
+                $valuesArr = array_merge($valuesArr, $collection->prepareValues());
+            }
+        }
+        return $valuesArr;
+    }
+
+    private function lJoinCollectionValueArr()
+    {
+        $valuesArr       = [];
+        $joinCollections = array_column($this->lJoinInfo, 0);
+        foreach ($joinCollections as $collection) {
+            if ($collection instanceof Select) {
+                $valuesArr = array_merge($valuesArr, $collection->prepareValues());
+            }
+        }
+        return $valuesArr;
+    }
+
+    private function rJoinCollectionValueArr()
+    {
+        $valuesArr       = [];
+        $joinCollections = array_column($this->rJoinInfo, 0);
+        foreach ($joinCollections as $collection) {
+            if ($collection instanceof Select) {
+                $valuesArr = array_merge($valuesArr, $collection->prepareValues());
+            }
+        }
+        return $valuesArr;
     }
 }
