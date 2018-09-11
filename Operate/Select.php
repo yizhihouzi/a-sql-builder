@@ -133,7 +133,7 @@ TAG;
         if ($this->forUpdate) {
             $preStr = "$preStr FOR UPDATE";
         }
-        return $preStr;
+        return preg_replace('/\s+/', ' ', $preStr);
     }
 
     private function getCollectionStr(Collection $collection): string

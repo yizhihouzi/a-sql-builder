@@ -60,7 +60,8 @@ class Insert extends Operate
         $insertColStr            = $this->createInsertColStr();
         $onDuplicateKeyUpdateStr = $this->createOnDuplicateKeyUpdateStr();
         $operator                = $this->replaceInstead ? 'REPLACE INTO' : 'INSERT INTO';
-        return "$operator $table $insertColStr $onDuplicateKeyUpdateStr";
+        $preStr                  = "$operator $table $insertColStr $onDuplicateKeyUpdateStr";
+        return preg_replace('/\s+/', ' ', $preStr);
     }
 
     /**

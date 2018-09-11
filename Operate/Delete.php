@@ -61,7 +61,7 @@ class Delete extends Operate
         if (is_int($this->limitStart) && is_int($this->limitEnd)) {
             $preStr = "$preStr limit $this->limitStart,$this->limitEnd";
         }
-        return $preStr;
+        return preg_replace('/\s+/', ' ', $preStr);
     }
 
     /**
