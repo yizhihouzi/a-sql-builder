@@ -35,10 +35,10 @@ class Column
 
     public function toSelectColStr()
     {
-        $col = "`$this->col`";
+        $col = $this->col;
         if (($this->collection) instanceof Collection) {
             $collectionName = $this->collection->getReferenceName();
-            $col            = "`$collectionName`.$col";
+            $col            = "`$collectionName`.`$col`";
         }
         if (is_string($this->alias)) {
             $col = "$col `$this->alias`";
