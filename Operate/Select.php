@@ -33,6 +33,8 @@ class Select extends Operate implements Collection
     protected $collection;
     private   $aliasIndex = 0;
 
+    private $unionSelectOperates = [];
+
     /**
      * Select constructor.
      *
@@ -133,6 +135,14 @@ TAG;
         if ($this->forUpdate) {
             $preStr = "$preStr FOR UPDATE";
         }
+        if (!empty($this->unionSelectOperates)) {
+            foreach ($this->unionSelectOperates as $unionSelectOperate) {
+                $unionOperate = $unionSelectOperate['type'];
+                /** @var Select $unionSelect */
+                $unionSelect = $unionSelectOperate['select'];
+                $preStr      = "$preStr $unionOperate {$unionSelect->prepareStr()}";
+            }
+        }
         return preg_replace('/\s+/', ' ', $preStr);
     }
 
@@ -157,6 +167,16 @@ TAG;
         } else {
             return '*';
         }
+    }
+
+    public function union(Select $select)
+    {
+        $this->unionSelectOperates[] = ['type' => 'UNION', 'select' => $select];
+    }
+
+    public function unionAll(Select $select)
+    {
+        $this->unionSelectOperates[] = ['type' => 'UNION ALL', 'select' => $select];
     }
 
     /**
@@ -288,9 +308,10 @@ TAG;
         $rCollectionValues     = $this->rJoinCollectionValueArr();
         $rConditionValues      = $this->rJoinConditionValueArr();
         $whereConditionValues  = $this->whereConditionValueArr();
+        $unionSelectValues     = $this->unionSelectValueArr();
         return array_merge($collectionValues, $innerCollectionValues, $innerConditionValues, $lCollectionValues,
             $lConditionValues, $rCollectionValues, $rConditionValues,
-            $whereConditionValues);
+            $whereConditionValues, $unionSelectValues);
     }
 
     /**
@@ -387,6 +408,19 @@ TAG;
         foreach ($joinCollections as $collection) {
             if ($collection instanceof Select) {
                 $valuesArr = array_merge($valuesArr, $collection->prepareValues());
+            }
+        }
+        return $valuesArr;
+    }
+
+    private function unionSelectValueArr()
+    {
+        $valuesArr = [];
+        if (!empty($this->unionSelectOperates)) {
+            foreach ($this->unionSelectOperates as $unionSelectOperate) {
+                /** @var Select $select */
+                $select    = $unionSelectOperate['select'];
+                $valuesArr = array_merge($valuesArr, $select->prepareValues());;
             }
         }
         return $valuesArr;
