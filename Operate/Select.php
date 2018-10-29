@@ -33,7 +33,7 @@ class Select extends Operate implements Collection
     protected $collection;
     private   $aliasIndex = 0;
 
-    private $unionSelectOperates = [];
+    private $selectOperates = [];
 
     /**
      * Select constructor.
@@ -135,12 +135,12 @@ TAG;
         if ($this->forUpdate) {
             $preStr = "$preStr FOR UPDATE";
         }
-        if (!empty($this->unionSelectOperates)) {
-            foreach ($this->unionSelectOperates as $unionSelectOperate) {
-                $unionOperate = $unionSelectOperate['type'];
-                /** @var Select $unionSelect */
-                $unionSelect = $unionSelectOperate['select'];
-                $preStr      = "$preStr $unionOperate {$unionSelect->prepareStr()}";
+        if (!empty($this->selectOperates)) {
+            foreach ($this->selectOperates as $unionSelectOperate) {
+                $operate = $unionSelectOperate['type'];
+                /** @var Select $operatedSelect */
+                $operatedSelect = $unionSelectOperate['select'];
+                $preStr         = "$preStr $operate {$operatedSelect->prepareStr()}";
             }
         }
         return preg_replace('/\s+/', ' ', $preStr);
@@ -171,12 +171,22 @@ TAG;
 
     public function union(Select $select)
     {
-        $this->unionSelectOperates[] = ['type' => 'UNION', 'select' => $select];
+        $this->selectOperates[] = ['type' => 'UNION', 'select' => $select];
+    }
+
+    public function except(Select $select)
+    {
+        $this->selectOperates[] = ['type' => 'EXCEPT', 'select' => $select];
+    }
+
+    public function intersect(Select $select)
+    {
+        $this->selectOperates[] = ['type' => 'INTERSECT', 'select' => $select];
     }
 
     public function unionAll(Select $select)
     {
-        $this->unionSelectOperates[] = ['type' => 'UNION ALL', 'select' => $select];
+        $this->selectOperates[] = ['type' => 'UNION ALL', 'select' => $select];
     }
 
     /**
@@ -416,8 +426,8 @@ TAG;
     private function unionSelectValueArr()
     {
         $valuesArr = [];
-        if (!empty($this->unionSelectOperates)) {
-            foreach ($this->unionSelectOperates as $unionSelectOperate) {
+        if (!empty($this->selectOperates)) {
+            foreach ($this->selectOperates as $unionSelectOperate) {
                 /** @var Select $select */
                 $select    = $unionSelectOperate['select'];
                 $valuesArr = array_merge($valuesArr, $select->prepareValues());;
