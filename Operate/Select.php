@@ -279,7 +279,7 @@ TAG;
             $colStrArr[] = (string)$column;
         }
         $colStr = implode(',', $colStrArr);
-        return "GROUP BY ($colStr) ";
+        return "GROUP BY $colStr ";
     }
 
     public function orderByStr()
