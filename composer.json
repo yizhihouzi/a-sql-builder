@@ -22,7 +22,9 @@
   },
   "require": {
     "php": ">=7.1",
-    "doctrine/dbal": "v2.8.0"
+    "doctrine/dbal": "^2.9",
+    "ext-pdo": "*",
+    "ext-json": "*"
   },
   "suggest": {
   },
@@ -31,7 +33,7 @@
       "DBOperate\\": "./"
     }
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "require-dev": {
     "phpunit/phpunit": "7.3"
   }

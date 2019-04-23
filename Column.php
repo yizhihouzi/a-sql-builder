@@ -46,6 +46,14 @@ class Column
         return $col;
     }
 
+    /**
+     * @param        $value
+     * @param string $relation
+     * @param string $groupName
+     *
+     * @return Condition
+     * @throws Exception\DBOperateException
+     */
     public function createCondition($value, $relation = '=', $groupName = 'e')
     {
         return new Condition($this, $value, $relation, $groupName);
